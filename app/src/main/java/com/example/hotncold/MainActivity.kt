@@ -10,11 +10,29 @@ import android.view.MenuItem
 import android.widget.Toast
 import android.support.v7.app.AlertDialog
 import android.widget.SeekBar
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
+import android.os.Build
+import android.support.annotation.RequiresApi
+import android.util.Log;
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import java.nio.file.Files.size
+import java.util.*
+import kotlin.collections.ArrayList as ArrayList1
+import android.content.IntentFilter
+import android.content.BroadcastReceiver
+import android.content.Context
+
 
 class MainActivity : AppCompatActivity() {
+
+    private val LOG_TAG: String? = null // Just for logging purposes. Could be anything. Set to app_name
+    private val REQUEST_ENABLE_BT = 99 // Any positive integer should work.
+    private var mBluetoothAdapter: BluetoothAdapter? = null
+
 
     var pings = 0
     var playersW =0
@@ -24,10 +42,14 @@ class MainActivity : AppCompatActivity() {
     var color2 = arrayListOf(255, 0, 0)
     //this array is for the merged one
     var color3 = intArrayOf(0, 0, 0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
 
 
@@ -79,6 +101,110 @@ class MainActivity : AppCompatActivity() {
         })
 
     }
+
+    private fun enableBluetoothOnDevice() {
+        if (mBluetoothAdapter == null) {
+            Log.e(LOG_TAG, "This device does not have a bluetooth adapter")
+            finish()
+            // If the android device does not have bluetooth, just return and get out.
+            // There's nothing the app can do in this case. Closing app.
+        }
+
+        // Check to see if bluetooth is enabled. Prompt to enable it
+        if (mBluetoothAdapter!!.isEnabled()) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_ENABLE_BT) {
+            if (resultCode == 0) {
+                // If the resultCode is 0, the user selected "No" when prompt to
+                // allow the app to enable bluetooth.
+                // You may want to display a dialog explaining what would happen if
+                // the user doesn't enable bluetooth.
+                Toast.makeText(this, "The user decided to deny bluetooth access", Toast.LENGTH_LONG).show()
+            } else
+                Log.i(LOG_TAG, "User allowed bluetooth access!")
+        }
+    }
+
+    private fun displayListOfFoundDevices() {
+        var arrayOfFoundBTDevices = ArrayList<BluetoothObject>()
+
+        // start looking for bluetooth devices
+        mBluetoothAdapter!!.startDiscovery()
+
+        // Discover new devices
+        // Create a BroadcastReceiver for ACTION_FOUND
+        val mReceiver = object : BroadcastReceiver() {
+
+            @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+            override fun onReceive(context: Context, intent: Intent) {
+                val action = intent.action
+                // When discovery finds a device
+                if (BluetoothDevice.ACTION_FOUND == action) {
+                    // Get the bluetoothDevice object from the Intent
+                    val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+
+                    // Get the "RSSI" to get the signal strength as integer,
+                    // but should be displayed in "dBm" units
+                    val rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, java.lang.Short.MIN_VALUE).toInt()
+
+                    // Create the device object and add it to the arrayList of devices
+                    val bluetoothObject = BluetoothObject()
+                    bluetoothObject.setBluetooth_name(device.name)
+                    bluetoothObject.setBluetooth_address(device.address)
+                    bluetoothObject.setBluetooth_state(device.bondState)
+                    bluetoothObject.setBluetooth_type(device.type)    // requires API 18 or higher
+                    bluetoothObject.setBluetooth_uuids(device.uuids)
+                    bluetoothObject.setBluetooth_rssi(rssi)
+
+                    arrayOfFoundBTDevices.add(bluetoothObject)
+
+                    // 1. Pass context and data to the custom adapter
+                    val adapter = FoundBTDevicesAdapter(applicationContext, arrayOfFoundBTDevices)
+
+                    // 2. setListAdapter
+                    setListAdapter(adapter)
+                }
+            }
+        }
+        // Register the BroadcastReceiver
+        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+        registerReceiver(mReceiver, filter)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    private fun getArrayOfAlreadyPairedBluetoothDevices(): ArrayList<BluetoothObject>? {
+        var arrayOfAlreadyPairedBTDevices: ArrayList<BluetoothObject>? = null
+
+        // Query paired devices
+        val pairedDevices = mBluetoothAdapter!!.getBondedDevices()
+        // If there are any paired devices
+        if (pairedDevices.size > 0) {
+            arrayOfAlreadyPairedBTDevices = ArrayList<BluetoothObject>()
+
+            // Loop through paired devices
+            for (device in pairedDevices) {
+                // Create the device object and add it to the arrayList of devices
+                val bluetoothObject = BluetoothObject()
+                bluetoothObject.setBluetooth_name(device.name)
+                bluetoothObject.setBluetooth_address(device.address)
+                bluetoothObject.setBluetooth_state(device.bondState)
+                bluetoothObject.setBluetooth_type(device.type)    // requires API 18 or higher
+                bluetoothObject.setBluetooth_uuids(device.uuids)
+
+                arrayOfAlreadyPairedBTDevices.add(bluetoothObject)
+            }
+        }
+
+        return arrayOfAlreadyPairedBTDevices
+    }
+
 
     fun mergeValues(){
         //0,50,100
