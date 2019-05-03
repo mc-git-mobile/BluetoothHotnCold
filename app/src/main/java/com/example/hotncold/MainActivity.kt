@@ -51,12 +51,12 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    private val mReceiver = object : BroadcastReceiver() {
-        @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-        override fun onReceive(context: Context, intent: Intent) {
-            handleBTDevice(intent)
-        }
-    }
+    //private val mReceiver = object : BroadcastReceiver() {
+        //@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+        //override fun onReceive(context: Context, intent: Intent) {
+        //    handleBTDevice(intent)
+        //}
+    //}
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,6 +68,8 @@ class MainActivity : AppCompatActivity() {
         listView = findViewById(R.id.device_list)
         arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, device_list)
         listView?.adapter = arrayAdapter
+
+        refresh.setOnClickListener{ pairedDeviceList()}
 
 
 
@@ -122,7 +124,36 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun handleBTDevice(intent: Intent) {
+    private fun pairedDeviceList (){
+        m_paired_devices = m_bluetooth_adapter!!.bondedDevices
+        val list : ArrayList<BluetoothDevice> = ArrayList()
+        var device_list:ListView = findViewById(R.id.device_list)
+
+        if (!m_paired_devices.isEmpty()) {
+            for (device:BluetoothDevice in m_paired_devices) {
+                list.add(device)
+                Log.i("device", ""+device)
+            }
+        }
+        else {
+            toast("no paired bluetooth devices found")
+        }
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
+        device_list.adapter = adapter
+        device_list.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+            val device: BluetoothDevice = list[position]
+            val address: String = device.address
+
+            //val intent = Intent(this, ControlActivity::class.java)
+            //intent.putExtra(EXTRA_ADRESS, address)
+            //startActivity(intent)
+        }
+    }
+
+
+
+    /*private fun handleBTDevice(intent: Intent) {
         val action = intent.action
         // When discovery finds a device
         if (BluetoothDevice.ACTION_FOUND == action) {
@@ -141,7 +172,7 @@ class MainActivity : AppCompatActivity() {
             client?.start()*/
 
         }
-    }
+    }*/
 
     private fun setupDiscovery() {
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
@@ -199,6 +230,8 @@ class MainActivity : AppCompatActivity() {
             true}
 
             R.id.connect -> {
+
+                /*
                 m_paired_devices = m_bluetooth_adapter!!.bondedDevices
                 val list : ArrayList<BluetoothDevice> = ArrayList()
 
@@ -207,6 +240,9 @@ class MainActivity : AppCompatActivity() {
                         list.add(device)
                         Log.i("device", ""+device)
                     }
+                }
+                else {
+                    toast("no paired bluetooth devices found")
                 }
                 arrayAdapter?.notifyDataSetChanged()
 
@@ -220,14 +256,15 @@ class MainActivity : AppCompatActivity() {
                     //val intent = Intent(this, ControlActivity::class.java)
                     //intent.putExtra(EXTRA_ADRESS, address)
                     //startActivity(intent)
-                }
+                }*/
 
+                pairedDeviceList()
 
+                var device_list:ListView = findViewById(R.id.device_list)
                 if (show_list == false) {
                     device_list.visibility = View.VISIBLE
                     refresh.visibility = View.VISIBLE
                 }
-
 
 
                 true
