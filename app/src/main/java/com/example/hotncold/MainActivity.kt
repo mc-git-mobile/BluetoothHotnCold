@@ -127,48 +127,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun pairedDeviceList(){
-        m_paired_devices = m_bluetooth_adapter!!.bondedDevices
-        val list : ArrayList<BluetoothDevice> = ArrayList()
-
-        if (!m_paired_devices.isEmpty()) {
-            for (device:BluetoothDevice in m_paired_devices) {
-                list.add(device)
-                Log.i("device", ""+device)
-            }
-        }
-        else {
-            toast("no paired bluetooth devices found")
-        }
-
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
-        device_list.adapter = adapter
-        device_list.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
-            val device: BluetoothDevice = list[position]
-            val address: String = device.address
-
-            val intent = Intent(this, ControlActivity::class.java)
-            intent.putExtra(EXTRA_ADRESS, address)
-            startActivity(intent)
-        }
-    }
-
-    override fun onActivityResult(requestCode:Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_ENABLE_BLUETOOTH) {
-            if(resultCode == Activity.RESULT_OK) {
-                if(m_bluetooth_adapter!!.isEnabled) {
-                    toast("Bluetooth has been enabled")
-                }
-                else {
-                    toast("Bluetooth has been disabled")
-                }
-            }
-            else if (resultCode == Activity.RESULT_CANCELED) {
-                toast("Bluetooth enabling has been cancelled")
-            }
-        }
-    }
 
 
 
