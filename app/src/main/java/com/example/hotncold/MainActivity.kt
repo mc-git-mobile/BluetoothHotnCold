@@ -1,5 +1,6 @@
 package com.example.hotncold
 
+import android.app.Activity
 import android.graphics.Color
 import android.graphics.Color.rgb
 import android.os.Bundle
@@ -25,6 +26,9 @@ import kotlin.collections.ArrayList as ArrayList1
 import android.content.IntentFilter
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import org.jetbrains.anko.toast
 
 
 class MainActivity : AppCompatActivity() {
@@ -33,7 +37,14 @@ class MainActivity : AppCompatActivity() {
     private val REQUEST_ENABLE_BT = 99 // Any positive integer should work.
     private var mBluetoothAdapter: BluetoothAdapter? = null
 
-    lateinit var m_bluetooth
+    private var m_bluetooth_adapter:BluetoothAdapter? = null
+    private lateinit var m_paired_devices: Set<BluetoothDevice>
+    private val REQUEST_ENABLE_BLUETOOTH = 1
+
+    companion object {
+        val EXTRA_SSRI:String = "RSSI"
+        val EXTRA_ADRESS: String = "Device_address"
+    }
 
 
     var pings = 0
@@ -52,6 +63,18 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        m_bluetooth_adapter = BluetoothAdapter.getDefaultAdapter()
+        if (m_bluetooth_adapter == null) {
+            toast ("this device doesnt support bluetooth")
+            return
+        }
+        if(!m_bluetooth_adapter!!.isEnabled) {
+            val enableBluetoothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BLUETOOTH)
+        }
+        //action_scan
+        refresh.setOnClickListener{ pairedDeviceList()}
 
 
 
@@ -104,7 +127,52 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun enableBluetoothOnDevice() {
+    private fun pairedDeviceList(){
+        m_paired_devices = m_bluetooth_adapter!!.bondedDevices
+        val list : ArrayList<BluetoothDevice> = ArrayList()
+
+        if (!m_paired_devices.isEmpty()) {
+            for (device:BluetoothDevice in m_paired_devices) {
+                list.add(device)
+                Log.i("device", ""+device)
+            }
+        }
+        else {
+            toast("no paired bluetooth devices found")
+        }
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
+        device_list.adapter = adapter
+        device_list.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+            val device: BluetoothDevice = list[position]
+            val address: String = device.address
+
+            val intent = Intent(this, ControlActivity::class.java)
+            intent.putExtra(EXTRA_ADRESS, address)
+            startActivity(intent)
+        }
+    }
+
+    override fun onActivityResult(requestCode:Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_ENABLE_BLUETOOTH) {
+            if(resultCode == Activity.RESULT_OK) {
+                if(m_bluetooth_adapter!!.isEnabled) {
+                    toast("Bluetooth has been enabled")
+                }
+                else {
+                    toast("Bluetooth has been disabled")
+                }
+            }
+            else if (resultCode == Activity.RESULT_CANCELED) {
+                toast("Bluetooth enabling has been cancelled")
+            }
+        }
+    }
+
+
+
+    /*private fun enableBluetoothOnDevice() {
         if (mBluetoothAdapter == null) {
             Log.e(LOG_TAG, "This device does not have a bluetooth adapter")
             finish()
@@ -205,7 +273,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         return arrayOfAlreadyPairedBTDevices
-    }
+    }*/
 
 
     fun mergeValues(){
@@ -229,10 +297,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
+
             R.id.action_About ->{
                 //val toast= Toast.makeText(applicationContext, "Buzzzzzz", Toast.LENGTH_LONG)
                 //toast.show()
@@ -259,6 +325,12 @@ class MainActivity : AppCompatActivity() {
                 }
                 builder.show()
             true}
+
+            R.id.scan -> {
+
+                true
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
     }

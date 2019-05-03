@@ -10,7 +10,7 @@
           android:title="@string/action_results"
           android:orderInCategory="100"
           app:showAsAction="never"/>
-    <item android:id="@+id/action_scan"
+    <item android:id="@+id/scan"
           android:title="@string/action_scan"
           android:orderInCategory="10"
           app:showAsAction="never"/>
