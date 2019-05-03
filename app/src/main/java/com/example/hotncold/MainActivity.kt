@@ -33,6 +33,8 @@ class MainActivity : AppCompatActivity() {
     private val REQUEST_ENABLE_BT = 99 // Any positive integer should work.
     private var mBluetoothAdapter: BluetoothAdapter? = null
 
+    lateinit var m_bluetooth
+
 
     var pings = 0
     var playersW =0
