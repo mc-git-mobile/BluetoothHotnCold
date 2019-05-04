@@ -9,6 +9,7 @@ import android.view.MenuItem
 import android.support.v7.app.AlertDialog
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent;
@@ -38,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     var color2 = arrayListOf(255, 0, 0)
     //this array is for the merged one
     var color3 = intArrayOf(0, 0, 0)
+    var bluetoothGatt: BluetoothGatt? = null
 
     private lateinit var m_paired_devices: Set<BluetoothDevice>
     private val REQUEST_ENABLE_BLUETOOTH = 1
@@ -64,6 +66,7 @@ class MainActivity : AppCompatActivity() {
     //}
 
 
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -139,6 +142,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private fun pairedDeviceList (){
         m_paired_devices = m_bluetooth_adapter!!.bondedDevices
         val list : ArrayList<BluetoothDevice> = ArrayList()
@@ -157,7 +161,10 @@ class MainActivity : AppCompatActivity() {
         device_list.adapter = adapter
         device_list.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             val device: BluetoothDevice = list[position]
+            //var rssi:Short = intent.getShortExtra(device.EXTRA_RSSI, short.MIN_VALUE)
             val address: String = device.address
+            //bluetoothGatt = device.connectGatt(this, false, gattCallback)
+
             ping.visibility = View.VISIBLE
             seekBar.visibility = View.VISIBLE
             heatView.visibility = View.VISIBLE
@@ -215,6 +222,7 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
 
@@ -301,4 +309,6 @@ class MainActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+
+
 }
