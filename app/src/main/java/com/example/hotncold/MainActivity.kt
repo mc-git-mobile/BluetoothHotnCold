@@ -1,5 +1,6 @@
 package com.example.hotncold
 
+import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity;
@@ -39,6 +40,10 @@ class MainActivity : AppCompatActivity() {
     var color3 = intArrayOf(0, 0, 0)
 
     private lateinit var m_paired_devices: Set<BluetoothDevice>
+    private val REQUEST_ENABLE_BLUETOOTH = 1
+    //private var server: AcceptThread? = null                //server object
+    //private var client:ConnectThread? = null
+
 
     var show_list = false
 
@@ -69,8 +74,18 @@ class MainActivity : AppCompatActivity() {
         arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, device_list)
         listView?.adapter = arrayAdapter
 
-        refresh.setOnClickListener{ pairedDeviceList()}
 
+        m_bluetooth_adapter = BluetoothAdapter.getDefaultAdapter()
+        if (m_bluetooth_adapter == null) {
+            toast ("this device doesnt support bluetooth")
+            return
+        }
+        if(!m_bluetooth_adapter!!.isEnabled) {
+            val enableBluetoothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BLUETOOTH)
+        }
+
+        refresh.setOnClickListener{ pairedDeviceList()}
 
 
 
@@ -132,7 +147,6 @@ class MainActivity : AppCompatActivity() {
         if (!m_paired_devices.isEmpty()) {
             for (device:BluetoothDevice in m_paired_devices) {
                 list.add(device)
-                Log.i("device", ""+device)
             }
         }
         else {
@@ -144,6 +158,17 @@ class MainActivity : AppCompatActivity() {
         device_list.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             val device: BluetoothDevice = list[position]
             val address: String = device.address
+            ping.visibility = View.VISIBLE
+            seekBar.visibility = View.VISIBLE
+            heatView.visibility = View.VISIBLE
+            pingCount.visibility = View.VISIBLE
+            coldView.visibility = View.VISIBLE
+            heatView.visibility = View.VISIBLE
+            smile.visibility = View.VISIBLE
+            device_list.visibility = View.INVISIBLE
+            refresh.visibility = View.INVISIBLE
+
+
 
             //val intent = Intent(this, ControlActivity::class.java)
             //intent.putExtra(EXTRA_ADRESS, address)
@@ -151,34 +176,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-
-    /*private fun handleBTDevice(intent: Intent) {
-        val action = intent.action
-        // When discovery finds a device
-        if (BluetoothDevice.ACTION_FOUND == action) {
-            // Get the BluetoothDevice object from the Intent
-            val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-            val deviceName  =
-                if (device.name != null) {
-                    device.name.toString()
-                } else {
-                    "--no name--"
+    override fun onActivityResult(requestCode:Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_ENABLE_BLUETOOTH) {
+            if(resultCode == Activity.RESULT_OK) {
+                if(m_bluetooth_adapter!!.isEnabled) {
+                    toast("Bluetooth has been enabled")
                 }
-
-            device_list.add("$deviceName, $device \n")
-            /*m_bluetooth_adapter!!.cancelDiscovery()
-            client = ConnectThread(device)  //FIX** remember and reconnect if interrupted?
-            client?.start()*/
-
+                else {
+                    toast("Bluetooth has been disabled")
+                }
+            }
+            else if (resultCode == Activity.RESULT_CANCELED) {
+                toast("Bluetooth enabling has been cancelled")
+            }
         }
-    }*/
-
-    private fun setupDiscovery() {
-        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-        registerReceiver(mReceiver, filter)
-        m_bluetooth_adapter!!.startDiscovery()
     }
+
+
+
 
     fun mergeValues(){
         //0,50,100
@@ -258,13 +274,25 @@ class MainActivity : AppCompatActivity() {
                     //startActivity(intent)
                 }*/
 
-                pairedDeviceList()
+                //pairedDeviceList()
 
                 var device_list:ListView = findViewById(R.id.device_list)
-                if (show_list == false) {
-                    device_list.visibility = View.VISIBLE
-                    refresh.visibility = View.VISIBLE
-                }
+
+                ping.visibility = View.INVISIBLE
+                seekBar.visibility = View.INVISIBLE
+                heatView.visibility = View.INVISIBLE
+                pingCount.visibility = View.INVISIBLE
+                coldView.visibility = View.INVISIBLE
+                heatView.visibility = View.INVISIBLE
+                smile.visibility = View.INVISIBLE
+                device_list.visibility = View.VISIBLE
+                refresh.visibility = View.VISIBLE
+
+
+
+
+                pairedDeviceList()
+
 
 
                 true
