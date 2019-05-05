@@ -130,6 +130,9 @@ class MainActivity : AppCompatActivity() {
                 //getPairedDevices()
                 setUpBroadcastReceiver()
             }
+            val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+            registerReceiver(mReceiver, filter)
+            m_bluetooth_adapter!!.startDiscovery()
 
         }
 
@@ -318,7 +321,7 @@ class MainActivity : AppCompatActivity() {
                 heatView.visibility = View.INVISIBLE
                 smile.visibility = View.INVISIBLE
                 device_list_m.visibility = View.VISIBLE
-                refresh.visibility = View.VISIBLE
+                //refresh.visibility = View.VISIBLE
 
                 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -337,7 +340,7 @@ class MainActivity : AppCompatActivity() {
                     //val address: String = device.address
 
                     device_list_m.visibility = View.INVISIBLE
-                    refresh.visibility = View.INVISIBLE
+                    //refresh.visibility = View.INVISIBLE
 
                     ping.visibility = View.VISIBLE
                     seekBar.visibility = View.VISIBLE
@@ -355,9 +358,6 @@ class MainActivity : AppCompatActivity() {
                     setUpBroadcastReceiver()
 
                 }
-
-                //getPairedDevices()
-                //setUpBroadcastReceiver()
 
 
 
@@ -522,13 +522,17 @@ class MainActivity : AppCompatActivity() {
             if (device_to_find == deviceName){
                 var na = abs(rssi.toInt())
 
-                Log.i(TCLIENT,"RSSI" +  abs(rssi.toInt()))
+                Log.i(TCLIENT,"RSSI" +  rssi.toInt())
                 toast(na.toString())
-                if (rssi <= 100 && rssi >= 0){
+                if (na < 100 && na > 0){
                     seekBar.setProgress(na)
+                    Log.i(TCLIENT,"RSSI in range" +  abs(rssi.toInt()))
+
                 }
-                else if (rssi < 0 ) {
+                else if (na <= 0 ) {
                     toast("you are too far away")
+                    Log.i(TCLIENT,"RSSI too far" +  abs(rssi.toInt()))
+
 
                 }
 
@@ -729,33 +733,18 @@ class MainActivity : AppCompatActivity() {
                 if (msgString[0].toString() == "0") {
                     Log.i(TSERVER, msgString+"my string")
                     var seek:SeekBar = findViewById(R.id.seekBar)
+                    //seekBar.setProgress(na)
+
                     //seek.set
 
 
 
                     //Toast.makeText(applicationContext, "something happened", Toast.LENGTH_LONG).show()
                 }
-
-                    /*val vibratorService = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                    vibratorService.vibrate(500)
-                } else if (msgString[0].toString() == "2") {
-                    val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
-                    val cameraId = cameraManager.getCameraIdList()[0]
-                    cameraManager.setTorchMode(cameraId, true)
-                } else if (msgString[0].toString() == "3") {
-                    val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
-                    val cameraId = cameraManager.getCameraIdList()[0]
-                    cameraManager.setTorchMode(cameraId, false)
-                } else if (msgString[0].toString() == "4") {
-                    val tone = ToneGenerator(AudioManager.STREAM_MUSIC, 50)
-                    tone.startTone(ToneGenerator.TONE_DTMF_C, 500)
-                }*/
                 Thread.sleep(1000)
                 while (msgString[0].toString() != "9") {
                     run()
-                    //manageConnectedSocket(socket)
                 }
-                //Thread.sleep(3000)
 
 
             } catch (uee: UnsupportedEncodingException) {
