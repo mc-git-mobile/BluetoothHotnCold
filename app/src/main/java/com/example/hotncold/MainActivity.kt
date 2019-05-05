@@ -14,11 +14,7 @@ import android.content.Context
 import android.content.Intent;
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.hardware.camera2.CameraManager
-import android.media.AudioManager
-import android.media.ToneGenerator
 import android.os.Build
-import android.os.Vibrator
 import android.support.annotation.RequiresApi
 import android.support.v4.app.ActivityCompat
 import android.util.Log
@@ -35,6 +31,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.io.UnsupportedEncodingException
 import java.util.*
+import kotlin.math.abs
 
 
 class MainActivity : AppCompatActivity() {
@@ -51,9 +48,11 @@ class MainActivity : AppCompatActivity() {
     var color3 = intArrayOf(0, 0, 0)
     var bluetoothGatt: BluetoothGatt? = null
 
+    var device_to_find = "none"
+
     private var myUUID: UUID? = null
-    private var mBluetoothAdapter: BluetoothAdapter? = null //holds the Bluetooth Adapter
-    private var mTextArea: TextView? = null                 //for writing messages to screen
+    //private var mBluetoothAdapter: BluetoothAdapter? = null //holds the Bluetooth Adapter
+    //private var mTextArea: TextView? = null                 //for writing messages to screen
     private var server: AcceptThread? = null                //server object
     private var client:ConnectThread? = null
     var sent = "0"
@@ -67,14 +66,19 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var m_paired_devices: Set<BluetoothDevice>
     private val REQUEST_ENABLE_BLUETOOTH = 1
-    var show_list = false
+
     var device_list = arrayListOf<String>("")
+    var device_list1 = arrayListOf<String>("")
+    var device_list2 = arrayListOf<String>("")
+
+
     private var m_bluetooth_adapter: BluetoothAdapter? = null //holds the Bluetooth Adapter
     private var arrayAdapter: ArrayAdapter<String>? = null // adapter for list view if needed
     private var listView: ListView? = null // list view for action bar to show data if needed
 
 
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -82,12 +86,17 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        listView = findViewById(R.id.device_list)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+        myUUID = UUID.fromString(MY_UUID_STRING)
+
+
+
+        listView = findViewById(R.id.device_list_m)
         arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, device_list)
         listView?.adapter = arrayAdapter
 
-
         m_bluetooth_adapter = BluetoothAdapter.getDefaultAdapter()
+
         if (m_bluetooth_adapter == null) {
             toast ("this device doesnt support bluetooth")
             return
@@ -97,7 +106,7 @@ class MainActivity : AppCompatActivity() {
             startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BLUETOOTH)
         }
 
-        refresh.setOnClickListener{ pairedDeviceList()}
+        //refresh.setOnClickListener{ pairedDeviceList()}
 
         ping.setOnClickListener{
             if (pings < 5){
@@ -116,6 +125,10 @@ class MainActivity : AppCompatActivity() {
             if(seekVal > 99){
                 heatView.setBackgroundColor(Color.rgb(105,190,40))
                 smile.setImageResource(R.drawable.trophy)
+            }
+            if (device_to_find !== "none") {
+                //getPairedDevices()
+                setUpBroadcastReceiver()
             }
 
         }
@@ -146,13 +159,17 @@ class MainActivity : AppCompatActivity() {
 
         })
 
+
     }
 
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private fun pairedDeviceList (){
+    //@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    /*private fun pairedDeviceList (){
+
+
+        ///////////////////////////////////////////////////////////
         m_paired_devices = m_bluetooth_adapter!!.bondedDevices
         val list : ArrayList<BluetoothDevice> = ArrayList()
-        var device_list:ListView = findViewById(R.id.device_list)
+        var device_list:ListView = findViewById(R.id.device_list_m)
 
         if (!m_paired_devices.isEmpty()) {
             for (device:BluetoothDevice in m_paired_devices) {
@@ -181,9 +198,18 @@ class MainActivity : AppCompatActivity() {
             refresh.visibility = View.INVISIBLE
 
         }
-    }
+    }*/
 
     override fun onActivityResult(requestCode:Int, resultCode: Int, data: Intent?) {
+        Log.i(LOG_TAG, "onActivityResult(): requestCode = $requestCode")
+        if (requestCode == REQUEST_ENABLE_BT) {
+            if (resultCode == Activity.RESULT_OK) {
+                Log.i(LOG_TAG, "  --    Bluetooth is enabled")
+                getPairedDevices() //find already known paired devices
+                setUpBroadcastReceiver()
+            }
+        }
+        /*
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_ENABLE_BLUETOOTH) {
             if(resultCode == Activity.RESULT_OK) {
@@ -197,9 +223,8 @@ class MainActivity : AppCompatActivity() {
             else if (resultCode == Activity.RESULT_CANCELED) {
                 toast("Bluetooth enabling has been cancelled")
             }
-        }
+        }*/
     }
-
 
     fun mergeValues(){
         //0,50,100
@@ -220,9 +245,28 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+
+            R.id.disc -> {
+                val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
+                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, N_SECONDS)
+                startActivity(discoverableIntent)
+                //create server thread
+                server = AcceptThread()
+                if (server != null) {   //start server thread
+                    Log.i(TSERVER, "Connect Button spawning server thread")
+                    //mTextArea!!.append("Connect Button: spawning server thread $server \n")
+                    server!!.start()     //calls AcceptThread's run() method
+                } else {
+                    Log.i(TSERVER, "setupButtons(): server is null")
+                }
+
+                true
+
+            }
 
             R.id.action_About ->{
                 //val toast= Toast.makeText(applicationContext, "Buzzzzzz", Toast.LENGTH_LONG)
@@ -252,6 +296,73 @@ class MainActivity : AppCompatActivity() {
             true}
 
             R.id.connect -> {
+
+                var list : ArrayList<BluetoothDevice> = ArrayList()
+                var list2 : ArrayList<String> = ArrayList()
+                m_paired_devices = m_bluetooth_adapter!!.bondedDevices
+
+                if (m_paired_devices.isNotEmpty()) {
+                    for (device:BluetoothDevice in m_paired_devices) {
+                        list.add(device)
+                        list2.add(device.name.toString())
+
+                    }
+                }
+
+
+                ping.visibility = View.INVISIBLE
+                seekBar.visibility = View.INVISIBLE
+                heatView.visibility = View.INVISIBLE
+                pingCount.visibility = View.INVISIBLE
+                coldView.visibility = View.INVISIBLE
+                heatView.visibility = View.INVISIBLE
+                smile.visibility = View.INVISIBLE
+                device_list_m.visibility = View.VISIBLE
+                refresh.visibility = View.VISIBLE
+
+                //////////////////////////////////////////////////////////////////////////////////////////////
+
+                val adapter2 = ArrayAdapter(this, android.R.layout.simple_list_item_1, list2)
+                device_list_m.adapter = adapter2
+
+
+                device_list_m.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+                    //var full_device_to_find = list2[position]
+                    device_to_find = list2[position]
+
+                    Log.i(TCLIENT, "getting device to find<<<<--------------------" + device_to_find)
+
+                    //device1 = list[position]
+                    //var rssi:Short = intent.getShortExtra(device.EXTRA_RSSI, short.MIN_VALUE)
+                    //val address: String = device.address
+
+                    device_list_m.visibility = View.INVISIBLE
+                    refresh.visibility = View.INVISIBLE
+
+                    ping.visibility = View.VISIBLE
+                    seekBar.visibility = View.VISIBLE
+                    heatView.visibility = View.VISIBLE
+                    pingCount.visibility = View.VISIBLE
+                    coldView.visibility = View.VISIBLE
+                    heatView.visibility = View.VISIBLE
+                    smile.visibility = View.VISIBLE
+
+                    list.clear()
+
+                    list2.clear()
+
+                    getPairedDevices()
+                    setUpBroadcastReceiver()
+
+                }
+
+                //getPairedDevices()
+                //setUpBroadcastReceiver()
+
+
+
+
+                /*
 
                 /*
                 m_paired_devices = m_bluetooth_adapter!!.bondedDevices
@@ -294,12 +405,7 @@ class MainActivity : AppCompatActivity() {
                 device_list.visibility = View.VISIBLE
                 refresh.visibility = View.VISIBLE
 
-
-
-
-                pairedDeviceList()
-
-
+                pairedDeviceList() */
 
                 true
             }
@@ -308,59 +414,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /*
-    private fun setUpButtons() {
-        val scanButton:Button = findViewById(R.id.scan_button)
-        scanButton?.setOnClickListener {       //Scanning is the action performed by the client
-            getPairedDevices()
-            setUpBroadcastReceiver()
-        }
-        val connectButton = findViewById(R.id.connect_button) as Button?
-        connectButton?.setOnClickListener {    //This button activates the App as the server
-            Log.i(TSERVER, "Connect Button setting up server")
-            mTextArea!!.append("Connect Button: setting up server\n")
-            //make server discoverable for N_SECONDS
-            val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
-            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, N_SECONDS)
-            startActivity(discoverableIntent)
-            //create server thread
-            server = AcceptThread()
-            if (server != null) {   //start server thread
-                Log.i(TSERVER, "Connect Button spawning server thread")
-                mTextArea!!.append("Connect Button: spawning server thread $server \n")
-                server!!.start()     //calls AcceptThread's run() method
-            } else {
-                Log.i(TSERVER, "setupButtons(): server is null")
-            }
-        }
-    }*/
-
     public override fun onResume() {
         super.onResume()
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        m_bluetooth_adapter = BluetoothAdapter.getDefaultAdapter()
         Log.i(LOG_TAG, "onResume()")
-        if (mBluetoothAdapter == null) {
+        if (m_bluetooth_adapter == null) {
             // Device does not support Bluetooth
             Log.i(LOG_TAG, "No Bluetooth on this device")
             Toast.makeText(baseContext,
                 "No Bluetooth on this device", Toast.LENGTH_LONG).show()
-        } else if (!mBluetoothAdapter!!.isEnabled) {
+        } else if (!m_bluetooth_adapter!!.isEnabled) {
             Log.i(LOG_TAG, "enabling Bluetooth")
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
         }
-        mTextArea?.append("This device is:  ${mBluetoothAdapter?.name} \n")
+        //mTextArea?.append("This device is:  ${m_bluetooth_adapter?.name} \n")
         Log.i(LOG_TAG, "End of onResume()")
     }
 
     private fun getPairedDevices() {//find already known paired devices
-        val pairedDevices = mBluetoothAdapter!!.bondedDevices
+        val pairedDevices = m_bluetooth_adapter!!.bondedDevices
         Log.i(TCLIENT, "--------------\ngetPairedDevices() - Known Paired Devices")
         // If there are paired devices
         if (pairedDevices.size > 0) {
             for (device in pairedDevices) {
                 Log.i(TCLIENT, device.name + "\n" + device)
-                mTextArea!!.append("" + device.name + "\n" + device + "\n")
+                device_list1.add("" + device.name + "\n" + device + "\n")
             }
         }
         Log.i(TCLIENT, "getPairedDevices() - End of Known Paired Devices\n------")
@@ -413,7 +492,7 @@ class MainActivity : AppCompatActivity() {
         Log.i(TCLIENT,"Activating Discovery")
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
         registerReceiver(mReceiver, filter)
-        mBluetoothAdapter!!.startDiscovery()
+        m_bluetooth_adapter!!.startDiscovery()
     }
 
     //******************************************************************************************
@@ -422,42 +501,55 @@ class MainActivity : AppCompatActivity() {
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun handleBTDevice(intent: Intent) {
+
         Log.i(TCLIENT, "handleBRDevice() -- starting   <<<<--------------------")
         val action = intent.action
         // When discovery finds a device
         if (BluetoothDevice.ACTION_FOUND == action) {
             // Get the BluetoothDevice object from the Intent
             val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+            var rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE)
+
             val deviceName  =
                 if (device.name != null) {
                     device.name.toString()
                 } else {
                     "--no name--"
                 }
-            Log.i(TCLIENT, deviceName + "\n" + device)
-            mTextArea!!.append("$deviceName, $device \n")
+            Log.i(TCLIENT, deviceName + "iiijhkjhkhn\n" + device + "\ndevice to find" + device_to_find)
 
-            // The following is specific to this App for the client
-            if (deviceName.length > 3) { //for now, looking for MSU prefix
-                val prefix = deviceName.subSequence(0,3)
-                mTextArea!!.append("Prefix = $prefix\n    ")
-                if (prefix == "mot") {//This is the server
-                    Log.i(TCLIENT,"Canceling Discovery")
-                    mBluetoothAdapter!!.cancelDiscovery()
-                    Log.i(TCLIENT,"Connecting")
-                    client = ConnectThread(device)  //FIX** remember and reconnect if interrupted?
-                    Log.i(TCLIENT,"Running Connect Thread")
-                    client?.start()
+
+            if (device_to_find == deviceName){
+                var na = abs(rssi.toInt())
+
+                Log.i(TCLIENT,"RSSI" +  abs(rssi.toInt()))
+                toast(na.toString())
+                if (rssi <= 100 && rssi >= 0){
+                    seekBar.setProgress(na)
                 }
+                else if (rssi < 0 ) {
+                    toast("you are too far away")
+
+                }
+
+                Log.i(TCLIENT,"Canceling Discovery")
+                m_bluetooth_adapter!!.cancelDiscovery()
+                Log.i(TCLIENT,"Connecting")
+                client = ConnectThread(device)  //FIX** remember and reconnect if interrupted?
+                Log.i(TCLIENT,"Running Connect Thread")
+                client?.start()
+
             }
+
         }
+
     }
     //****************************************************************************************************
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onStop() {
         super.onStop()
-        mBluetoothAdapter!!.cancelDiscovery()    //stop looking for Bluetooth devices
+        m_bluetooth_adapter!!.cancelDiscovery()    //stop looking for Bluetooth devices
         client?.cancel()
     }
 
@@ -495,7 +587,7 @@ class MainActivity : AppCompatActivity() {
             // Cancel discovery because it will slow down the connection
             Log.i(TCLIENT, "ConnectThread: run()")
             Log.i(TCLIENT, "in ClientThread - Canceling Discovery")
-            mBluetoothAdapter!!.cancelDiscovery()
+            m_bluetooth_adapter!!.cancelDiscovery()
             if (mmSocket == null) {
                 Log.e(TCLIENT,"ConnectThread:run(): mmSocket is null")
             }
@@ -569,7 +661,7 @@ class MainActivity : AppCompatActivity() {
             val tmp: BluetoothServerSocket
             try {
                 // myUUID is the app's UUID string, also used by the client code
-                tmp = mBluetoothAdapter!!.listenUsingRfcommWithServiceRecord(SERVICE_NAME, myUUID)
+                tmp = m_bluetooth_adapter!!.listenUsingRfcommWithServiceRecord(SERVICE_NAME, myUUID)
                 Log.i(TSERVER, "AcceptThread registered the server\n")
                 mmServerSocket = tmp
             } catch (e: IOException) {
@@ -634,8 +726,14 @@ class MainActivity : AppCompatActivity() {
                 Log.i(TSERVER, msgString[0].toString())
 
 
-                if (msgString[0].toString() == "1") {
-                    Log.i(TSERVER, msgString)
+                if (msgString[0].toString() == "0") {
+                    Log.i(TSERVER, msgString+"my string")
+                    var seek:SeekBar = findViewById(R.id.seekBar)
+                    //seek.set
+
+
+
+                    //Toast.makeText(applicationContext, "something happened", Toast.LENGTH_LONG).show()
                 }
 
                     /*val vibratorService = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -652,7 +750,7 @@ class MainActivity : AppCompatActivity() {
                     val tone = ToneGenerator(AudioManager.STREAM_MUSIC, 50)
                     tone.startTone(ToneGenerator.TONE_DTMF_C, 500)
                 }*/
-                Thread.sleep(2000)
+                Thread.sleep(1000)
                 while (msgString[0].toString() != "9") {
                     run()
                     //manageConnectedSocket(socket)
