@@ -1,4 +1,7 @@
 <resources>
-    <string name="app_name">hotncold</string>
+    <string name="app_name">Hide and Seek</string>
     <string name="action_About">About</string>
+    <string name="action_scan">Connect</string>
+    <string name="action_results">Results</string>
+    <string name="action_disconnect">Disconnect</string>
 </resources>
