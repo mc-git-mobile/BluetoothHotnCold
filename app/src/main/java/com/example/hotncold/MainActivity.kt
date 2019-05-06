@@ -181,16 +181,20 @@ class MainActivity : AppCompatActivity() {
             var fileInputStream: FileInputStream? = null
             fileInputStream = openFileInput(fileName)
 
-            var inputStreamReader: InputStreamReader = InputStreamReader(fileInputStream)
-            val bufferedReader: BufferedReader = BufferedReader(inputStreamReader)
+            var inputStreamReader = InputStreamReader(fileInputStream)
+            val bufferedReader = BufferedReader(inputStreamReader)
             val stringBuilder: StringBuilder = StringBuilder()
-            var text: String? = null
-            while ({ text = bufferedReader.readLine(); text }() != null) {
-                stringBuilder.append(text)
-            }
+            var text: String = ""
+            text = bufferedReader.readLine()
+            Log.i(TCLIENT, text)
+
+
+            //while ({ text = bufferedReader.readLine(); text }() != null) {
+            //    stringBuilder.append(text)
+            //}
 
             Log.i(TCLIENT, "$$$$$$$$$$$$$$$$$$$$$$")
-            //Log.i(TCLIENT, text)
+            Log.i(TCLIENT, text)
             var split_words = text?.split(Regex("#"))
             playersW = split_words!![0].toInt()
             playersL = split_words!![1].toInt()
@@ -246,8 +250,6 @@ class MainActivity : AppCompatActivity() {
             Log.i(TCLIENT, combined)
             Log.i(TCLIENT, "combined stringin save")
 
-
-
             Toast.makeText(applicationContext,"data saved",Toast.LENGTH_LONG).show()
 
         }catch (e: FileNotFoundException){
@@ -267,22 +269,6 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
 
-
-        /*
-        val FILEIN = "KotIO.kt"
-        val FILEOUT = "out.txt"
-        val filesDir = "."
-        val fin = File(filesDir, FILEIN)
-        val sc = Scanner(fin)
-        var line:String
-        val fout = File(filesDir, FILEOUT)
-        val out = fout.printWriter()
-        out.println("This is the output file\n\n")
-        out.println(playersW.toString())
-        out.println(playersL.toString())
-
-        //out.printf("\n\nThat's all %s\n","folks")
-        out.close()*/
     }
 
 
