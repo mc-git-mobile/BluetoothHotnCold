@@ -126,16 +126,26 @@ class MainActivity : AppCompatActivity() {
 
 
                 Toast.makeText(applicationContext,
-                    "You've lost " + playersL + " times", Toast.LENGTH_SHORT).show()
+                    "You've lost " + playersL + " times", Toast.LENGTH_LONG).show()
                 heatView.setBackgroundColor(Color.rgb(170,0,0))
                 smile.setImageResource(R.drawable.loser)
+               //Thread.sleep(3000)
+                //reset()
                 pings = 0
                 sent = "01"
 
             }
-            if(seekVal > 99){
+            if(seekVal > 98){
                 heatView.setBackgroundColor(Color.rgb(105,190,40))
                 smile.setImageResource(R.drawable.trophy)
+                load()
+                playersW ++
+                save(playersW, playersL)
+                Toast.makeText(applicationContext,
+                    "You've won " + playersW + " time(s)", Toast.LENGTH_LONG).show()
+                Thread.sleep(3000)
+                //reset()
+                pings = 0
             }
             if (device_to_find !== "none") {
                 setUpBroadcastReceiver()
@@ -363,7 +373,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 builder.show()
             true}
-
+            R.id.action_results ->{
+                message()
+                true
+            }
             R.id.connect -> {
 
                 var list : ArrayList<BluetoothDevice> = ArrayList()
@@ -454,6 +467,28 @@ class MainActivity : AppCompatActivity() {
             }
         }
         Log.i(TCLIENT, "getPairedDevices() - End of Known Paired Devices\n------")
+    }
+
+    fun reset(){
+        Thread.sleep(3000)
+        heatView.setBackgroundColor(Color.rgb(0,0,0))
+        pings = 0
+        smile.setImageResource(R.drawable.smile3)
+
+    }
+
+    fun message (){
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Win/Loss Results")
+        builder.setMessage("You have won $playersW time(s)\n"
+        + "You have lost $playersL time(s)")
+
+        builder.setNeutralButton("Continue") { dialog, which ->
+            Toast.makeText(applicationContext,
+                "Alright", Toast.LENGTH_SHORT).show()
+
+        }
+        builder.show()
     }
 
     /**
@@ -578,7 +613,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 else if (new_dist.toInt() <= 0 ) {
                     seekBar.setProgress(99)
-                    toast("you are are right on top of it!")
+                    //toast("you are are right on top of it!")
                     if (disconect) {
                         sent = "99"
                     }
@@ -589,7 +624,7 @@ class MainActivity : AppCompatActivity() {
                 else if (new_dist.toInt() >= 100 ) {
                     seekBar.setProgress(1)
 
-                    toast("you are too far away! < 0")
+                    //toast("you are too far away! < 0")
                     if (disconect) {
                         sent = "01"
                     }
@@ -851,6 +886,7 @@ class MainActivity : AppCompatActivity() {
         private const val SERVICE_NAME = "Talker"
         private const val LOG_TAG = "--Talker----"
     }
+
 
 
 }
