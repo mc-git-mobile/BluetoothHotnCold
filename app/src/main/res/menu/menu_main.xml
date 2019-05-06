@@ -14,9 +14,9 @@
           android:title="@string/action_scan"
           android:orderInCategory="10"
           app:showAsAction="never"/>
-    <item android:id="@+id/action_disconnect"
+    <item android:id="@+id/disconnect"
           android:title="@string/action_disconnect"
           android:orderInCategory="75"
           app:showAsAction="never"/>
-    <item android:title="Discoverable" android:id="@+id/disc"/>
+    <item android:title="Discoverable" android:id="@+id/discoverable"/>
 </menu>

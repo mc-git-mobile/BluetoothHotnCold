@@ -46,16 +46,18 @@ class MainActivity : AppCompatActivity() {
     var color2 = arrayListOf(255, 0, 0)
     //this array is for the merged one
     var color3 = intArrayOf(0, 0, 0)
-    var bluetoothGatt: BluetoothGatt? = null
 
     var device_to_find = "none"
 
     private var myUUID: UUID? = null
-    //private var mBluetoothAdapter: BluetoothAdapter? = null //holds the Bluetooth Adapter
-    //private var mTextArea: TextView? = null                 //for writing messages to screen
     private var server: AcceptThread? = null                //server object
     private var client:ConnectThread? = null
     var sent = "0"
+    var disconect = true
+
+
+    var ten:Double = 10.00000000000000000000000000
+    var measured_power = -69
 
     private val mReceiver = object : BroadcastReceiver() {
         @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -69,7 +71,6 @@ class MainActivity : AppCompatActivity() {
 
     var device_list = arrayListOf<String>("")
     var device_list1 = arrayListOf<String>("")
-    var device_list2 = arrayListOf<String>("")
 
 
     private var m_bluetooth_adapter: BluetoothAdapter? = null //holds the Bluetooth Adapter
@@ -97,6 +98,9 @@ class MainActivity : AppCompatActivity() {
 
         m_bluetooth_adapter = BluetoothAdapter.getDefaultAdapter()
 
+        seekBar.setProgress(100)
+
+
         if (m_bluetooth_adapter == null) {
             toast ("this device doesnt support bluetooth")
             return
@@ -106,7 +110,6 @@ class MainActivity : AppCompatActivity() {
             startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BLUETOOTH)
         }
 
-        //refresh.setOnClickListener{ pairedDeviceList()}
 
         ping.setOnClickListener{
             if (pings < 5){
@@ -127,7 +130,6 @@ class MainActivity : AppCompatActivity() {
                 smile.setImageResource(R.drawable.trophy)
             }
             if (device_to_find !== "none") {
-                //getPairedDevices()
                 setUpBroadcastReceiver()
             }
             val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
@@ -165,43 +167,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    //@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    /*private fun pairedDeviceList (){
-
-
-        ///////////////////////////////////////////////////////////
-        m_paired_devices = m_bluetooth_adapter!!.bondedDevices
-        val list : ArrayList<BluetoothDevice> = ArrayList()
-        var device_list:ListView = findViewById(R.id.device_list_m)
-
-        if (!m_paired_devices.isEmpty()) {
-            for (device:BluetoothDevice in m_paired_devices) {
-                list.add(device)
-            }
-        }
-        else {
-            toast("no paired bluetooth devices found")
-        }
-
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
-        device_list.adapter = adapter
-        device_list.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
-            val device: BluetoothDevice = list[position]
-            //var rssi:Short = intent.getShortExtra(device.EXTRA_RSSI, short.MIN_VALUE)
-            val address: String = device.address
-
-            ping.visibility = View.VISIBLE
-            seekBar.visibility = View.VISIBLE
-            heatView.visibility = View.VISIBLE
-            pingCount.visibility = View.VISIBLE
-            coldView.visibility = View.VISIBLE
-            heatView.visibility = View.VISIBLE
-            smile.visibility = View.VISIBLE
-            device_list.visibility = View.INVISIBLE
-            refresh.visibility = View.INVISIBLE
-
-        }
-    }*/
 
     override fun onActivityResult(requestCode:Int, resultCode: Int, data: Intent?) {
         Log.i(LOG_TAG, "onActivityResult(): requestCode = $requestCode")
@@ -253,7 +218,7 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
 
-            R.id.disc -> {
+            R.id.discoverable -> {
                 val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
                 discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, N_SECONDS)
                 startActivity(discoverableIntent)
@@ -261,7 +226,6 @@ class MainActivity : AppCompatActivity() {
                 server = AcceptThread()
                 if (server != null) {   //start server thread
                     Log.i(TSERVER, "Connect Button spawning server thread")
-                    //mTextArea!!.append("Connect Button: spawning server thread $server \n")
                     server!!.start()     //calls AcceptThread's run() method
                 } else {
                     Log.i(TSERVER, "setupButtons(): server is null")
@@ -270,26 +234,24 @@ class MainActivity : AppCompatActivity() {
                 true
 
             }
+            R.id.disconnect -> {
+                disconect = false
+                sent = "00"
+                if (device_to_find !== "none") {
+                    setUpBroadcastReceiver()
+                }
+                val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+                registerReceiver(mReceiver, filter)
+                m_bluetooth_adapter!!.startDiscovery()
+                true
+            }
 
             R.id.action_About ->{
-                //val toast= Toast.makeText(applicationContext, "Buzzzzzz", Toast.LENGTH_LONG)
-                //toast.show()
                 val builder = AlertDialog.Builder(this)
                 builder.setTitle("About Hot n Cold")
                 builder.setMessage("1. Connect to your friend's device via bluetooth\n"  +
                         "2. Find companion following beeps and colors\n" +
                         "3. Win by turning the box green")
-                //builder.setPositiveButton("OK", DialogInterface.OnClickListener(function = x))
-
-                //builder.setPositiveButton(android.R.string.yes) { dialog, which ->
-                    //Toast.makeText(applicationContext,
-                  //      android.R.string.yes, Toast.LENGTH_SHORT).show()
-                //}
-
-                //builder.setNegativeButton(android.R.string.no) { dialog, which ->
-                    //Toast.makeText(applicationContext,
-                  //      android.R.string.no, Toast.LENGTH_SHORT).show()
-                //}
 
                 builder.setNeutralButton("Continue") { dialog, which ->
                     Toast.makeText(applicationContext,
@@ -321,7 +283,6 @@ class MainActivity : AppCompatActivity() {
                 heatView.visibility = View.INVISIBLE
                 smile.visibility = View.INVISIBLE
                 device_list_m.visibility = View.VISIBLE
-                //refresh.visibility = View.VISIBLE
 
                 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -330,17 +291,11 @@ class MainActivity : AppCompatActivity() {
 
 
                 device_list_m.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
-                    //var full_device_to_find = list2[position]
                     device_to_find = list2[position]
 
                     Log.i(TCLIENT, "getting device to find<<<<--------------------" + device_to_find)
 
-                    //device1 = list[position]
-                    //var rssi:Short = intent.getShortExtra(device.EXTRA_RSSI, short.MIN_VALUE)
-                    //val address: String = device.address
-
                     device_list_m.visibility = View.INVISIBLE
-                    //refresh.visibility = View.INVISIBLE
 
                     ping.visibility = View.VISIBLE
                     seekBar.visibility = View.VISIBLE
@@ -358,54 +313,6 @@ class MainActivity : AppCompatActivity() {
                     setUpBroadcastReceiver()
 
                 }
-
-
-
-
-                /*
-
-                /*
-                m_paired_devices = m_bluetooth_adapter!!.bondedDevices
-                val list : ArrayList<BluetoothDevice> = ArrayList()
-
-                if (!m_paired_devices.isEmpty()) {
-                    for (device:BluetoothDevice in m_paired_devices) {
-                        list.add(device)
-                        Log.i("device", ""+device)
-                    }
-                }
-                else {
-                    toast("no paired bluetooth devices found")
-                }
-                arrayAdapter?.notifyDataSetChanged()
-
-                var device_list:ListView = findViewById(R.id.device_list)
-                device_list.adapter = arrayAdapter
-
-                device_list.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
-                    val device: BluetoothDevice = list[position]
-                    val address: String = device.address
-
-                    //val intent = Intent(this, ControlActivity::class.java)
-                    //intent.putExtra(EXTRA_ADRESS, address)
-                    //startActivity(intent)
-                }*/
-
-                //pairedDeviceList()
-
-                var device_list:ListView = findViewById(R.id.device_list)
-
-                ping.visibility = View.INVISIBLE
-                seekBar.visibility = View.INVISIBLE
-                heatView.visibility = View.INVISIBLE
-                pingCount.visibility = View.INVISIBLE
-                coldView.visibility = View.INVISIBLE
-                heatView.visibility = View.INVISIBLE
-                smile.visibility = View.INVISIBLE
-                device_list.visibility = View.VISIBLE
-                refresh.visibility = View.VISIBLE
-
-                pairedDeviceList() */
 
                 true
             }
@@ -522,19 +429,70 @@ class MainActivity : AppCompatActivity() {
             if (device_to_find == deviceName){
                 var na = abs(rssi.toInt())
 
-                Log.i(TCLIENT,"RSSI" +  rssi.toInt())
-                toast(na.toString())
-                if (na < 100 && na > 0){
-                    seekBar.setProgress(na)
-                    Log.i(TCLIENT,"RSSI in range" +  abs(rssi.toInt()))
+
+                var part = (measured_power - rssi)/(ten*2).toDouble()
+
+                var distance = Math.pow(ten, part)
+                var new_dist = distance*10
+                var new_dist1 = distance*100
+                var new_dist2 = new_dist*2
+
+                Log.i(TCLIENT,"RSSI dist- " +  distance + "meters")
+
+
+                Log.i(TCLIENT,"new RSSI dist *10- " +  new_dist.toInt() + "meters")
+                Log.i(TCLIENT,"new RSSI dist *100- " +  new_dist1.toInt() + "meters")
+
+                Log.i(TCLIENT,"new RSSI dist*10*2- " +  new_dist2.toInt() + "meters")
+
+                Log.i(TCLIENT,"RSSI- " +  rssi.toInt())
+                //toast(new_dist.toString())
+                if (new_dist.toInt() < 100 && new_dist.toInt() > 0){
+                    toast(new_dist.toString())
+                    var reverse = 100 - new_dist.toInt()
+                    if (reverse <10 && reverse > 0 ){
+                        Log.i(TCLIENT,"RSSI in range-  " +  abs(rssi.toInt()))
+
+                        if (disconect) {
+                            sent = "0" + reverse.toString()
+                        }
+                    }
+                    else {
+                        Log.i(TCLIENT,"RSSI in range-  " +  abs(rssi.toInt()))
+
+                        if (disconect) {
+                            sent = reverse.toString()
+                        }
+
+
+                    }
+                    //sent = reverse.toString()
+
+                    seekBar.setProgress(reverse)
+                    Log.i(TCLIENT,"RSSI in range-  " +  abs(rssi.toInt()))
 
                 }
-                else if (na <= 0 ) {
-                    toast("you are too far away")
-                    Log.i(TCLIENT,"RSSI too far" +  abs(rssi.toInt()))
+                else if (new_dist.toInt() <= 0 ) {
+                    seekBar.setProgress(99)
+                    toast("you are are right on top of it!")
+                    if (disconect) {
+                        sent = "99"
+                    }
 
 
+                    Log.i(TCLIENT,"RSSI too far <0  " +  abs(rssi.toInt()))
                 }
+                else if (new_dist.toInt() >= 100 ) {
+                    seekBar.setProgress(1)
+
+                    toast("you are too far away! < 0")
+                    if (disconect) {
+                        sent = "01"
+                    }
+
+                    Log.i(TCLIENT,"RSSI too far >0  " +  abs(rssi.toInt()))
+                }
+                disconect = true
 
                 Log.i(TCLIENT,"Canceling Discovery")
                 m_bluetooth_adapter!!.cancelDiscovery()
@@ -542,6 +500,7 @@ class MainActivity : AppCompatActivity() {
                 client = ConnectThread(device)  //FIX** remember and reconnect if interrupted?
                 Log.i(TCLIENT,"Running Connect Thread")
                 client?.start()
+
 
             }
 
@@ -627,7 +586,7 @@ class MainActivity : AppCompatActivity() {
             val msg = theMessage.toByteArray()
             val sentB = sent.toByteArray()
             try {
-                Log.i(TCLIENT, "Sending the message: [$theMessage]")
+                Log.i(TCLIENT, "Sending the message: [$sent]")
 
 
                 out = socket.outputStream
@@ -702,12 +661,10 @@ class MainActivity : AppCompatActivity() {
         //manage the Server's end of the conversation on the passed-in socket
         @RequiresApi(Build.VERSION_CODES.M)
         fun manageConnectedSocket(socket: BluetoothSocket) {
-            //var button1 =
             Log.i(TSERVER, "\nManaging the Socket\n")
             val inSt: InputStream
             val nBytes: Int
-            val msg = ByteArray(255) //arbitrary size
-            //var flashLightStatus =false
+            val msg = ByteArray(2) //arbitrary size
 
             try {
 
@@ -726,23 +683,24 @@ class MainActivity : AppCompatActivity() {
                 val msgString = msg.toString(Charsets.UTF_8)
                 //val toast = Toast.makeText(applicationContext, "Hello Javatpoint", Toast.LENGTH_LONG)
                 Log.i(TSERVER, "\nServer Received  $nBytes, Bytes:  [$msgString]\n")
-                runOnUiThread { echoMsg("\nReceived $nBytes:  [$msgString]\n") }
-                Log.i(TSERVER, msgString[0].toString())
+                //runOnUiThread { echoMsg("\nReceived $nBytes:  [$msgString]\n") }
+                Log.i(TSERVER, msgString.toString() + "+++++++++++++++++++++++")
 
 
-                if (msgString[0].toString() == "0") {
-                    Log.i(TSERVER, msgString+"my string")
+                /*if (msgString[0].toString() == "0") {
+                    Log.i(TSERVER, msgString+"  sent- my string")
                     var seek:SeekBar = findViewById(R.id.seekBar)
-                    //seekBar.setProgress(na)
+                    seek.setProgress(50)
 
-                    //seek.set
+                }*/
+                //Thread.sleep(1000)
+                while (msgString.toString() != "00") {
+                    val msgString = msg.toString(Charsets.UTF_8)
+                    var seek:SeekBar = findViewById(R.id.seekBar)
+                    seek.setProgress(msgString.toInt())
+                    Thread.sleep(1000)
 
 
-
-                    //Toast.makeText(applicationContext, "something happened", Toast.LENGTH_LONG).show()
-                }
-                Thread.sleep(1000)
-                while (msgString[0].toString() != "9") {
                     run()
                 }
 
@@ -750,6 +708,7 @@ class MainActivity : AppCompatActivity() {
             } catch (uee: UnsupportedEncodingException) {
                 Log.e(TSERVER,
                     "UnsupportedEncodingException when converting bytes to String\n $uee")
+                //cancel()
             } finally {
                 cancel()        //for this App - close() after 1 (or no) message received
             }
