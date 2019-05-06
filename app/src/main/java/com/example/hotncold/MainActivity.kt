@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
     var playersW = 0
     var playersL = 0
 
-    var seekVal =0
+    var seekVal = 0
     var color1 = arrayListOf(0, 219, 255)
     var color2 = arrayListOf(255, 0, 0)
     //this array is for the merged one
@@ -89,10 +89,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        //save(playersW, playersL)
+        save(playersW, playersL)
         //Log.i(TCLIENT, "iiiiinnnn   savvee")
 
-
+        /*
         val fileOutputStream:FileOutputStream
         var win1 = win.toString()
         var lose1 = lose.toString()
@@ -103,7 +103,6 @@ class MainActivity : AppCompatActivity() {
             fileOutputStream.write(combined.toByteArray())
             Log.i(TCLIENT, combined)
             Log.i(TCLIENT, "combined stringin save")
-            //Toast.makeText(applicationContext,"data saved",Toast.LENGTH_LONG).show()
 
         }catch (e: FileNotFoundException){
             Log.i(TCLIENT, "file not found")
@@ -117,7 +116,7 @@ class MainActivity : AppCompatActivity() {
         }catch (e: Exception){
             Log.i(TCLIENT, "Exception")
             e.printStackTrace()
-        }
+        }*/
 
 
 
@@ -145,11 +144,9 @@ class MainActivity : AppCompatActivity() {
             pings++
             pingCount.text = pings.toString()
             }else{
+
                 pingCount.text = "LOSER"
-                //playersL++
                 load()
-
-
                 playersL++
                 save(playersW, playersL)
 
@@ -204,7 +201,7 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     smile.setImageResource(R.drawable.smile2)
                 }
-                pingCount.text = seekVal.toString()
+                //pingCount.text = seekVal.toString()
 
             }
 
@@ -225,9 +222,6 @@ class MainActivity : AppCompatActivity() {
             Log.i(TCLIENT, text)
 
 
-            //while ({ text = bufferedReader.readLine(); text }() != null) {
-            //    stringBuilder.append(text)
-            //}
 
             Log.i(TCLIENT, "$$$$$$$$$$$$$$$$$$$$$$")
             Log.i(TCLIENT, text)
@@ -240,13 +234,9 @@ class MainActivity : AppCompatActivity() {
             Log.i(TCLIENT, playersL.toString())
 
 
-
-
         }else{
             Toast.makeText(applicationContext,"file name cannot be blank",Toast.LENGTH_LONG).show()
         }
-
-
 
     }
 
@@ -265,7 +255,7 @@ class MainActivity : AppCompatActivity() {
             Log.i(TCLIENT, combined)
             Log.i(TCLIENT, "combined stringin save")
 
-            Toast.makeText(applicationContext,"data saved",Toast.LENGTH_LONG).show()
+            //Toast.makeText(applicationContext,"data saved",Toast.LENGTH_LONG).show()
 
         }catch (e: FileNotFoundException){
             Log.i(TCLIENT, "file not found")
