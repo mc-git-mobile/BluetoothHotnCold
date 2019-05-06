@@ -26,21 +26,20 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlin.collections.ArrayList as ArrayList1
 import org.jetbrains.anko.toast
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.UnsupportedEncodingException
+import java.io.*
 import java.util.*
 import kotlin.math.abs
 
 
 class MainActivity : AppCompatActivity() {
 
-
+    val fileName = "win.txt"
 
     var pings = 0
-    var playersW =0
+
+    var playersW = 0
     var playersL = 0
+
     var seekVal =0
     var color1 = arrayListOf(0, 219, 255)
     var color2 = arrayListOf(255, 0, 0)
@@ -52,12 +51,15 @@ class MainActivity : AppCompatActivity() {
     private var myUUID: UUID? = null
     private var server: AcceptThread? = null                //server object
     private var client:ConnectThread? = null
+
     var sent = "0"
     var disconect = true
+    var win = true
+    var lose = true
 
 
     var ten:Double = 10.00000000000000000000000000
-    var measured_power = -69
+    var measured_power = -69 // 1 meter rssi
 
     private val mReceiver = object : BroadcastReceiver() {
         @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -87,19 +89,17 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
+        save(playersW, playersL)
+
+
         supportActionBar?.setDisplayShowTitleEnabled(false)
         myUUID = UUID.fromString(MY_UUID_STRING)
-
-
-
         listView = findViewById(R.id.device_list_m)
         arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, device_list)
         listView?.adapter = arrayAdapter
-
         m_bluetooth_adapter = BluetoothAdapter.getDefaultAdapter()
 
         seekBar.setProgress(100)
-
 
         if (m_bluetooth_adapter == null) {
             toast ("this device doesnt support bluetooth")
@@ -117,12 +117,20 @@ class MainActivity : AppCompatActivity() {
             pingCount.text = pings.toString()
             }else{
                 pingCount.text = "LOSER"
+                //playersL++
+                load()
+
+
                 playersL++
+                save(playersW, playersL)
+
+
                 Toast.makeText(applicationContext,
                     "You've lost " + playersL + " times", Toast.LENGTH_SHORT).show()
                 heatView.setBackgroundColor(Color.rgb(170,0,0))
                 smile.setImageResource(R.drawable.loser)
                 pings = 0
+                sent = "01"
 
             }
             if(seekVal > 99){
@@ -133,6 +141,7 @@ class MainActivity : AppCompatActivity() {
                 setUpBroadcastReceiver()
             }
             val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+
             registerReceiver(mReceiver, filter)
             m_bluetooth_adapter!!.startDiscovery()
 
@@ -165,6 +174,115 @@ class MainActivity : AppCompatActivity() {
         })
 
 
+    }
+    fun load() {
+
+        if(fileName.toString()!=null && fileName.toString().trim()!=""){
+            var fileInputStream: FileInputStream? = null
+            fileInputStream = openFileInput(fileName)
+
+            var inputStreamReader: InputStreamReader = InputStreamReader(fileInputStream)
+            val bufferedReader: BufferedReader = BufferedReader(inputStreamReader)
+            val stringBuilder: StringBuilder = StringBuilder()
+            var text: String? = null
+            while ({ text = bufferedReader.readLine(); text }() != null) {
+                stringBuilder.append(text)
+            }
+
+            Log.i(TCLIENT, "$$$$$$$$$$$$$$$$$$$$$$")
+            //Log.i(TCLIENT, text)
+            var split_words = text?.split(Regex("#"))
+            playersW = split_words!![0].toInt()
+            playersL = split_words!![1].toInt()
+            Log.i(TCLIENT, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
+            Log.i(TCLIENT, playersW.toString())
+            Log.i(TCLIENT, playersL.toString())
+
+
+
+
+        }else{
+            Toast.makeText(applicationContext,"file name cannot be blank",Toast.LENGTH_LONG).show()
+        }
+
+
+
+        /*
+        val FILEIN = "KotIO.kt"
+        val FILEOUT = "out.txt"
+        val filesDir = "."
+        val fin = File(filesDir, FILEIN)
+        val sc = Scanner(fin)
+        var line:String
+        val fout = File(filesDir, FILEOUT)
+        val out = fout.printWriter()
+        out.println("This is the output file\n\n")
+        while (sc.hasNext()) {
+            var line1 = sc.nextLine()
+            line = sc.nextLine()
+            playersW = line.toInt()
+            line = sc.nextLine()
+            playersL = line.toInt()
+        }
+        //out.printf("\n\nThat's all %s\n","folks")
+        out.close()*/
+    }
+
+    fun save(win:Int, lose:Int) {
+        Log.i(TCLIENT, "iiiiinnnn   savvee")
+
+
+        val fileOutputStream:FileOutputStream
+        var win1 = win.toString()
+        var lose1 = lose.toString()
+        var combined = win1 + "#" + lose1
+
+        try {
+            fileOutputStream = openFileOutput(fileName, Context.MODE_PRIVATE)
+            fileOutputStream.write(combined.toByteArray())
+            //fileOutputStream.write(lose1.toByteArray())
+
+            Log.i(TCLIENT, combined)
+            Log.i(TCLIENT, "combined stringin save")
+
+
+
+            Toast.makeText(applicationContext,"data saved",Toast.LENGTH_LONG).show()
+
+        }catch (e: FileNotFoundException){
+            Log.i(TCLIENT, "file not found")
+            e.printStackTrace()
+        }catch (e: NumberFormatException){
+            Log.i(TCLIENT, "number format exception")
+
+            e.printStackTrace()
+        }catch (e: IOException){
+            Log.i(TCLIENT, "IO exception")
+
+            e.printStackTrace()
+        }catch (e: Exception){
+            Log.i(TCLIENT, "Exception")
+
+            e.printStackTrace()
+        }
+
+
+        /*
+        val FILEIN = "KotIO.kt"
+        val FILEOUT = "out.txt"
+        val filesDir = "."
+        val fin = File(filesDir, FILEIN)
+        val sc = Scanner(fin)
+        var line:String
+        val fout = File(filesDir, FILEOUT)
+        val out = fout.printWriter()
+        out.println("This is the output file\n\n")
+        out.println(playersW.toString())
+        out.println(playersL.toString())
+
+        //out.printf("\n\nThat's all %s\n","folks")
+        out.close()*/
     }
 
 
@@ -521,11 +639,9 @@ class MainActivity : AppCompatActivity() {
      * This action is specific to this App.
      * @param msg The received info to display
      */
-    fun echoMsg(msg: String) {
+    //fun echoMsg(msg: String) {
         //mTextArea!!.append(msg)
-    }
-
-
+    //}
 
     ////////////////// Client Thread to talk to Server here ///////////////////
 
@@ -696,8 +812,20 @@ class MainActivity : AppCompatActivity() {
                 //Thread.sleep(1000)
                 while (msgString.toString() != "00") {
                     val msgString = msg.toString(Charsets.UTF_8)
-                    var seek:SeekBar = findViewById(R.id.seekBar)
-                    seek.setProgress(msgString.toInt())
+
+                    if (msgString.toString() == "01") {
+                        playersW += 1
+                    }
+                    else if(msgString.toString() == "02"){
+                        playersL +=1
+                    }
+                    else{
+                        var seek:SeekBar = findViewById(R.id.seekBar)
+                        seek.setProgress(msgString.toInt())
+                    }
+                    //val msgString = msg.toString(Charsets.UTF_8)
+                    //var seek:SeekBar = findViewById(R.id.seekBar)
+                    //seek.setProgress(msgString.toInt())
                     Thread.sleep(1000)
 
 
