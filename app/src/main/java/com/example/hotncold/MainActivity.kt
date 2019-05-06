@@ -89,7 +89,36 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        save(playersW, playersL)
+        //save(playersW, playersL)
+        //Log.i(TCLIENT, "iiiiinnnn   savvee")
+
+
+        val fileOutputStream:FileOutputStream
+        var win1 = win.toString()
+        var lose1 = lose.toString()
+        var combined = win1 + "#" + lose1
+
+        try {
+            fileOutputStream = openFileOutput(fileName, Context.MODE_PRIVATE)
+            fileOutputStream.write(combined.toByteArray())
+            Log.i(TCLIENT, combined)
+            Log.i(TCLIENT, "combined stringin save")
+            //Toast.makeText(applicationContext,"data saved",Toast.LENGTH_LONG).show()
+
+        }catch (e: FileNotFoundException){
+            Log.i(TCLIENT, "file not found")
+            e.printStackTrace()
+        }catch (e: NumberFormatException){
+            Log.i(TCLIENT, "number format exception")
+            e.printStackTrace()
+        }catch (e: IOException){
+            Log.i(TCLIENT, "IO exception")
+            e.printStackTrace()
+        }catch (e: Exception){
+            Log.i(TCLIENT, "Exception")
+            e.printStackTrace()
+        }
+
 
 
         supportActionBar?.setDisplayShowTitleEnabled(false)
@@ -154,7 +183,6 @@ class MainActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(seekBarBlue: SeekBar?) {
             }
 
-
             override fun onProgressChanged(seekBarBlue: SeekBar, i: Int, b: Boolean) {
                 seekVal = i
                 mergeValues()
@@ -168,11 +196,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 pingCount.text = seekVal.toString()
 
-
             }
 
         })
-
 
     }
     fun load() {
@@ -212,25 +238,6 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        /*
-        val FILEIN = "KotIO.kt"
-        val FILEOUT = "out.txt"
-        val filesDir = "."
-        val fin = File(filesDir, FILEIN)
-        val sc = Scanner(fin)
-        var line:String
-        val fout = File(filesDir, FILEOUT)
-        val out = fout.printWriter()
-        out.println("This is the output file\n\n")
-        while (sc.hasNext()) {
-            var line1 = sc.nextLine()
-            line = sc.nextLine()
-            playersW = line.toInt()
-            line = sc.nextLine()
-            playersL = line.toInt()
-        }
-        //out.printf("\n\nThat's all %s\n","folks")
-        out.close()*/
     }
 
     fun save(win:Int, lose:Int) {
@@ -245,8 +252,6 @@ class MainActivity : AppCompatActivity() {
         try {
             fileOutputStream = openFileOutput(fileName, Context.MODE_PRIVATE)
             fileOutputStream.write(combined.toByteArray())
-            //fileOutputStream.write(lose1.toByteArray())
-
             Log.i(TCLIENT, combined)
             Log.i(TCLIENT, "combined stringin save")
 
@@ -271,7 +276,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
     override fun onActivityResult(requestCode:Int, resultCode: Int, data: Intent?) {
         Log.i(LOG_TAG, "onActivityResult(): requestCode = $requestCode")
         if (requestCode == REQUEST_ENABLE_BT) {
@@ -281,21 +285,6 @@ class MainActivity : AppCompatActivity() {
                 setUpBroadcastReceiver()
             }
         }
-        /*
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_ENABLE_BLUETOOTH) {
-            if(resultCode == Activity.RESULT_OK) {
-                if(m_bluetooth_adapter!!.isEnabled) {
-                    toast("Bluetooth has been enabled")
-                }
-                else {
-                    toast("Bluetooth has been disabled")
-                }
-            }
-            else if (resultCode == Activity.RESULT_CANCELED) {
-                toast("Bluetooth enabling has been cancelled")
-            }
-        }*/
     }
 
     fun mergeValues(){
@@ -307,8 +296,6 @@ class MainActivity : AppCompatActivity() {
         color3[1] = ((percent2 * color2[1]) + (percent1 * color1[1])) / 100
         color3[2] = ((percent2 * color2[2]) + (percent1 * color1[2])) / 100
         //For proof that the percents are right for color merging
-        //val coast= Toast.makeText(applicationContext, "$percent1 , $percent2", Toast.LENGTH_LONG)
-        // coast.show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -577,10 +564,10 @@ class MainActivity : AppCompatActivity() {
 
                 }
                 else if (new_dist.toInt() <= 0 ) {
-                    seekBar.setProgress(99)
+                    seekBar.setProgress(98)
                     toast("you are are right on top of it!")
                     if (disconect) {
-                        sent = "99"
+                        sent = "98"
                     }
 
 
@@ -788,14 +775,6 @@ class MainActivity : AppCompatActivity() {
                 //runOnUiThread { echoMsg("\nReceived $nBytes:  [$msgString]\n") }
                 Log.i(TSERVER, msgString.toString() + "+++++++++++++++++++++++")
 
-
-                /*if (msgString[0].toString() == "0") {
-                    Log.i(TSERVER, msgString+"  sent- my string")
-                    var seek:SeekBar = findViewById(R.id.seekBar)
-                    seek.setProgress(50)
-
-                }*/
-                //Thread.sleep(1000)
                 while (msgString.toString() != "00") {
                     val msgString = msg.toString(Charsets.UTF_8)
 
@@ -809,11 +788,7 @@ class MainActivity : AppCompatActivity() {
                         var seek:SeekBar = findViewById(R.id.seekBar)
                         seek.setProgress(msgString.toInt())
                     }
-                    //val msgString = msg.toString(Charsets.UTF_8)
-                    //var seek:SeekBar = findViewById(R.id.seekBar)
-                    //seek.setProgress(msgString.toInt())
                     Thread.sleep(1000)
-
 
                     run()
                 }
