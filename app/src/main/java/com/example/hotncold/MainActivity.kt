@@ -155,11 +155,8 @@ class MainActivity : AppCompatActivity() {
                 heatView.setBackgroundColor(Color.rgb(170,0,0))
                 lose = true
                 smile.setImageResource(R.drawable.loser)
-                //Thread.sleep(3000)
-                //reset()
                 pings = 0
-                sent = "01"
-                //reset()
+                //sent = "01"
 
             }
             if(seekVal > 98){
@@ -171,12 +168,9 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(applicationContext,
                     "You've won " + playersW + " time(s)", Toast.LENGTH_LONG).show()
                 vibratorService.vibrate(500)
-                //Thread.sleep(3000)
-                //reset()
                 pings = 0
                 win = true
-                sent = "99"
-                //reset()
+                //sent = "99"
             }
             if (device_to_find !== "none") {
                 setUpBroadcastReceiver()
@@ -462,7 +456,6 @@ class MainActivity : AppCompatActivity() {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
         }
-        //mTextArea?.append("This device is:  ${m_bluetooth_adapter?.name} \n")
         Log.i(LOG_TAG, "End of onResume()")
     }
 
@@ -480,7 +473,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun reset(){
-        //Thread.sleep(3000)
         heatView.setBackgroundColor(Color.rgb(0,0,0))
         pings = 0
         pingCount.text = pings.toString()
@@ -598,9 +590,7 @@ class MainActivity : AppCompatActivity() {
                 Log.i(TCLIENT,"new RSSI dist*10*2- " +  new_dist2.toInt() + "meters")
 
                 Log.i(TCLIENT,"RSSI- " +  rssi.toInt())
-                //toast(new_dist.toString())
                 if (new_dist2.toInt() < 100 && new_dist2.toInt() > 0){
-                    //toast(new_dist.toString())
                     var reverse = 100 - new_dist2.toInt()
                     if (reverse <10 && reverse > 0 ){
                         Log.i(TCLIENT,"RSSI in range-  " +  abs(rssi.toInt()))
@@ -618,7 +608,6 @@ class MainActivity : AppCompatActivity() {
 
 
                     }
-                    //sent = reverse.toString()
 
                     seekBar.setProgress(reverse)
                     Log.i(TCLIENT,"RSSI in range-  " +  abs(rssi.toInt()))
@@ -626,7 +615,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 else if (new_dist2.toInt() <= 0 ) {
 
-                    //toast("you are are right on top of it!")
 
                     if (!disconect && !start) {
                         sent = "99"
@@ -639,7 +627,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 else if (new_dist2.toInt() >= 100 ) {
 
-                    //toast("you are too far away! < 0")
                     if (!disconect && !start) {
                         sent = "02"
                         seekBar.setProgress(2)
@@ -798,7 +785,6 @@ class MainActivity : AppCompatActivity() {
 
         @RequiresApi(Build.VERSION_CODES.M)
         override fun run() {
-            //var socket: BluetoothSocket?
             // Keep listening until exception occurs or a socket is returned
             while (true) {
                 Log.i(TSERVER, "AcceptTread.run(): Server Looking for a Connection")
@@ -852,7 +838,7 @@ class MainActivity : AppCompatActivity() {
                     var seek:SeekBar = findViewById(R.id.seekBar)
 
 
-                    if (msgString.toString() == "01") {
+                    if (msgString.toString() == "99") {
                         load()
                         playersW += 1
                         save(playersW, playersL)
@@ -868,7 +854,7 @@ class MainActivity : AppCompatActivity() {
                         })
 
                     }
-                    else if(msgString.toString() == "99"){
+                    else if(msgString.toString() == "01"){
                         load()
                         playersL +=1
                         save(playersW, playersL)
