@@ -5,6 +5,7 @@ import android.annotation.TargetApi
 import android.app.Activity
 import android.bluetooth.*
 import android.graphics.Color
+import android.os.Vibrator
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu
@@ -41,6 +42,8 @@ class MainActivity : AppCompatActivity() {
     var playersW = 0
     var playersL = 0
 
+
+
     var seekVal = 0
     var color1 = arrayListOf(0, 219, 255)
     var color2 = arrayListOf(255, 0, 0)
@@ -53,10 +56,11 @@ class MainActivity : AppCompatActivity() {
     private var server: AcceptThread? = null                //server object
     private var client:ConnectThread? = null
 
-    var sent = "0"
-    var disconect = true
+    var sent = "00"
+    var disconect = false
     var win = false
     var lose = false
+    var start = false
 
     var ten:Double = 10.00000000000000000000000000
     var measured_power = -69 // 1 meter rssi
@@ -82,11 +86,14 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     override fun onCreate(savedInstanceState: Bundle?) {
 
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
         save(playersW, playersL)
+        val vibratorService = getSystemService(Context.VIBRATOR_SERVICE ) as Vibrator
+
 
         supportActionBar?.setDisplayShowTitleEnabled(false)
         myUUID = UUID.fromString(MY_UUID_STRING)
@@ -109,71 +116,47 @@ class MainActivity : AppCompatActivity() {
 
         ping.setOnClickListener{
 
-            if(seekVal > 98 && pings < 5){
-                heatView.setBackgroundColor(Color.rgb(105,190,40))
-                smile.setImageResource(R.drawable.trophy)
-                load()
-                playersW ++
-                win = true
-                save(playersW, playersL)
-                Toast.makeText(applicationContext,
-                    "You've won " + playersW + " time(s)", Toast.LENGTH_LONG).show()
-                //Thread.sleep(3000)
-                //reset()
-                pings = 0
-            }
-
-            else if (pings < 5){
-            pings++
-            pingCount.text = pings.toString()
-            }
-            /*
-            else if(seekVal > 98){
-                heatView.setBackgroundColor(Color.rgb(105,190,40))
-                smile.setImageResource(R.drawable.trophy)
-                load()
-                playersW ++
-                win = true
-                save(playersW, playersL)
-                Toast.makeText(applicationContext,
-                    "You've won " + playersW + " time(s)", Toast.LENGTH_LONG).show()
-                Thread.sleep(3000)
-                //reset()
-                pings = 0
-            }*/
-            else{
+            if (pings < 5){
+                pings++
+                pingCount.text = pings.toString()
+            }else{
 
                 pingCount.text = "LOSER"
                 load()
                 playersL++
-                lose = true
                 save(playersW, playersL)
 
 
                 Toast.makeText(applicationContext,
                     "You've lost " + playersL + " times", Toast.LENGTH_LONG).show()
+                vibratorService.vibrate(500)
+
                 heatView.setBackgroundColor(Color.rgb(170,0,0))
+                lose = true
                 smile.setImageResource(R.drawable.loser)
-               //Thread.sleep(3000)
+                //Thread.sleep(3000)
                 //reset()
                 pings = 0
                 sent = "01"
+                //reset()
 
             }
-            /*
             if(seekVal > 98){
                 heatView.setBackgroundColor(Color.rgb(105,190,40))
                 smile.setImageResource(R.drawable.trophy)
                 load()
                 playersW ++
-                win = true
                 save(playersW, playersL)
                 Toast.makeText(applicationContext,
                     "You've won " + playersW + " time(s)", Toast.LENGTH_LONG).show()
-                Thread.sleep(3000)
+                vibratorService.vibrate(500)
+                //Thread.sleep(3000)
                 //reset()
                 pings = 0
-            }*/
+                win = true
+                sent = "99"
+                //reset()
+            }
             if (device_to_find !== "none") {
                 setUpBroadcastReceiver()
             }
@@ -202,7 +185,6 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     smile.setImageResource(R.drawable.smile2)
                 }
-                //pingCount.text = seekVal.toString()
 
             }
 
@@ -310,6 +292,11 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
 
+            R.id.reset -> {
+                reset()
+                true
+            }
+
             R.id.discoverable -> {
                 val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
                 discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, N_SECONDS)
@@ -327,7 +314,7 @@ class MainActivity : AppCompatActivity() {
 
             }
             R.id.disconnect -> {
-                disconect = false
+                disconect = true
                 sent = "00"
                 if (device_to_find !== "none") {
                     setUpBroadcastReceiver()
@@ -357,12 +344,14 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.connect -> {
 
-                var list : ArrayList<BluetoothDevice> = ArrayList()
-                var list2 : ArrayList<String> = ArrayList()
+                start = true
+
+                var list: ArrayList<BluetoothDevice> = ArrayList()
+                var list2: ArrayList<String> = ArrayList()
                 m_paired_devices = m_bluetooth_adapter!!.bondedDevices
 
                 if (m_paired_devices.isNotEmpty()) {
-                    for (device:BluetoothDevice in m_paired_devices) {
+                    for (device: BluetoothDevice in m_paired_devices) {
                         list.add(device)
                         list2.add(device.name.toString())
 
@@ -371,6 +360,7 @@ class MainActivity : AppCompatActivity() {
 
 
                 ping.visibility = View.INVISIBLE
+                heat.visibility = View.INVISIBLE
                 seekBar.visibility = View.INVISIBLE
                 heatView.visibility = View.INVISIBLE
                 pingCount.visibility = View.INVISIBLE
@@ -378,6 +368,8 @@ class MainActivity : AppCompatActivity() {
                 heatView.visibility = View.INVISIBLE
                 smile.visibility = View.INVISIBLE
                 device_list_m.visibility = View.VISIBLE
+                back.visibility = View.VISIBLE
+
 
                 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -399,6 +391,9 @@ class MainActivity : AppCompatActivity() {
                     coldView.visibility = View.VISIBLE
                     heatView.visibility = View.VISIBLE
                     smile.visibility = View.VISIBLE
+                    heat.visibility = View.VISIBLE
+                    back.visibility = View.INVISIBLE
+
 
                     list.clear()
 
@@ -408,6 +403,22 @@ class MainActivity : AppCompatActivity() {
                     setUpBroadcastReceiver()
 
                 }
+
+                back.setOnClickListener {
+
+                device_list_m.visibility = View.INVISIBLE
+                ping.visibility = View.VISIBLE
+                seekBar.visibility = View.VISIBLE
+                heatView.visibility = View.VISIBLE
+                pingCount.visibility = View.VISIBLE
+                coldView.visibility = View.VISIBLE
+                heatView.visibility = View.VISIBLE
+                smile.visibility = View.VISIBLE
+                heat.visibility = View.VISIBLE
+                back.visibility = View.INVISIBLE
+
+                }
+
 
                 true
             }
@@ -448,11 +459,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun reset(){
-        Thread.sleep(3000)
+        //Thread.sleep(3000)
         heatView.setBackgroundColor(Color.rgb(0,0,0))
         pings = 0
+        pingCount.text = pings.toString()
         smile.setImageResource(R.drawable.smile3)
     }
+
+
+
 
     fun message (){
         val builder = AlertDialog.Builder(this)
@@ -545,6 +560,7 @@ class MainActivity : AppCompatActivity() {
             if (device_to_find == deviceName){
                 var na = abs(rssi.toInt())
 
+
                 var part = (measured_power - rssi)/(ten*2).toDouble()
 
                 var distance = Math.pow(ten, part)
@@ -554,6 +570,7 @@ class MainActivity : AppCompatActivity() {
 
                 Log.i(TCLIENT,"RSSI dist- " +  distance + "meters")
 
+
                 Log.i(TCLIENT,"new RSSI dist *10- " +  new_dist.toInt() + "meters")
                 Log.i(TCLIENT,"new RSSI dist *100- " +  new_dist1.toInt() + "meters")
 
@@ -561,60 +578,69 @@ class MainActivity : AppCompatActivity() {
 
                 Log.i(TCLIENT,"RSSI- " +  rssi.toInt())
                 //toast(new_dist.toString())
-                if (new_dist.toInt() < 99 && new_dist.toInt() > 0){
-                    toast(new_dist.toString())
-                    var reverse = 100 - new_dist.toInt()
+                if (new_dist2.toInt() < 100 && new_dist2.toInt() > 0){
+                    //toast(new_dist.toString())
+                    var reverse = 100 - new_dist2.toInt()
                     if (reverse <10 && reverse > 0 ){
                         Log.i(TCLIENT,"RSSI in range-  " +  abs(rssi.toInt()))
 
-                        if (disconect) {
+                        if (!disconect) {
                             sent = "0" + reverse.toString()
                         }
                     }
                     else {
                         Log.i(TCLIENT,"RSSI in range-  " +  abs(rssi.toInt()))
 
-                        if (disconect) {
+                        if (!disconect && !start ) {
                             sent = reverse.toString()
                         }
 
+
                     }
+                    //sent = reverse.toString()
 
                     seekBar.setProgress(reverse)
                     Log.i(TCLIENT,"RSSI in range-  " +  abs(rssi.toInt()))
 
                 }
-                else if (new_dist.toInt() <= 0 ) {
+                else if (new_dist2.toInt() <= 0 ) {
 
-                    seekBar.setProgress(98)
                     //toast("you are are right on top of it!")
 
-                    if (disconect) {
-                        sent = "00"
+                    if (!disconect && !start) {
+                        sent = "99"
+                        seekBar.setProgress(99)
+
                     }
 
 
                     Log.i(TCLIENT,"RSSI too far <0  " +  abs(rssi.toInt()))
                 }
-                else if (new_dist.toInt() >= 100 ) {
-                    seekBar.setProgress(2)
+                else if (new_dist2.toInt() >= 100 ) {
 
                     //toast("you are too far away! < 0")
-                    if (disconect) {
-                        sent = "01"
+                    if (!disconect && !start) {
+                        sent = "02"
+                        seekBar.setProgress(2)
+
                     }
 
                     Log.i(TCLIENT,"RSSI too far >0  " +  abs(rssi.toInt()))
                 }
-                disconect = true
                 if (win) {
-                    sent == "01"
+                    sent = "01"
                 }
-                else if (lose){
-                    sent == "99"
+                if (lose){
+                    sent = "99"
                 }
+                if(start) {
+                    sent = "mm"
+
+                }
+                start = false
                 win = false
                 win = false
+                disconect = false
 
                 Log.i(TCLIENT,"Canceling Discovery")
                 m_bluetooth_adapter!!.cancelDiscovery()
@@ -623,11 +649,8 @@ class MainActivity : AppCompatActivity() {
                 Log.i(TCLIENT,"Running Connect Thread")
                 client?.start()
 
-
             }
-
         }
-
     }
     //****************************************************************************************************
 
@@ -818,28 +841,62 @@ class MainActivity : AppCompatActivity() {
                     var seek:SeekBar = findViewById(R.id.seekBar)
 
 
-                    if (msgString.toString() == "01") {
+                    if (msgString.toString() == "99") {
                         load()
                         playersW += 1
                         save(playersW, playersL)
                         seek.setProgress(2)
-                        smile.setImageResource(R.drawable.trophy)
+                        runOnUiThread(Runnable{
+                            smile.setImageResource(R.drawable.trophy)
+                            Toast.makeText(applicationContext,
+                                "You've won " , Toast.LENGTH_LONG).show()
+                            val vibratorService = getSystemService(Context.VIBRATOR_SERVICE ) as Vibrator
+
+                            vibratorService.vibrate(500)
+
+                            //toast("You Won")
+
+                            //Thread.sleep(3000)
+                            //heatView.setBackgroundColor(Color.rgb(0,0,0))
+                            pings = 0
+                            pingCount.text = pings.toString()
+                            //smile.setImageResource(R.drawable.smile3)
+                        })
+                        //smile.setImageResource(R.drawable.trophy)
 
                     }
-                    else if(msgString.toString() == "99"){
+                    else if(msgString.toString() == "01"){
                         load()
                         playersL +=1
                         save(playersW, playersL)
                         seek.setProgress(97)
-                        smile.setImageResource(R.drawable.loser)
+                        runOnUiThread(Runnable{
+                            smile.setImageResource(R.drawable.loser)
+                            Toast.makeText(applicationContext,
+                                "You've Lost " , Toast.LENGTH_LONG).show()
+                            val vibratorService = getSystemService(Context.VIBRATOR_SERVICE ) as Vibrator
+
+                            vibratorService.vibrate(500)
+
+                            //toast("You Lost")
+                            //Thread.sleep(3000)
+                            //heatView.setBackgroundColor(Color.rgb(0,0,0))
+                            pings = 0
+                            pingCount.text = pings.toString()
+                            //smile.setImageResource(R.drawable.smile3)
+                        })
+                        //smile.setImageResource(R.drawable.loser)
 
 
+                    }
+                    else if(msgString.toString() == "mm"){
+                        var startup = "startup routine"
                     }
                     else{
                         //var seek:SeekBar = findViewById(R.id.seekBar)
                         seek.setProgress(msgString.toInt())
                     }
-                    Thread.sleep(1000)
+                    //Thread.sleep(1000)
 
                     run()
                 }

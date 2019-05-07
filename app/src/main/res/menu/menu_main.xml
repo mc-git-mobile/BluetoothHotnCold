@@ -19,4 +19,5 @@
           android:orderInCategory="75"
           app:showAsAction="never"/>
     <item android:title="Discoverable" android:id="@+id/discoverable"/>
+    <item android:title="Reset" android:id="@+id/reset"/>
 </menu>

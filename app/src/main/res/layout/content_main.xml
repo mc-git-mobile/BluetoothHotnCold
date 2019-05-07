@@ -17,7 +17,7 @@
             android:layout_marginStart="8dp" android:layout_marginBottom="8dp"
             app:layout_constraintBottom_toBottomOf="parent" android:layout_marginTop="8dp"
             app:layout_constraintTop_toTopOf="parent" app:layout_constraintHorizontal_bias="0.497"
-            app:layout_constraintVertical_bias="0.342"/>
+            app:layout_constraintVertical_bias="0.396"/>
     <Button
             android:text="Ping"
             android:layout_width="300dp"
@@ -26,7 +26,7 @@
             app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="8dp"
             android:layout_marginStart="8dp" app:layout_constraintTop_toTopOf="parent" android:layout_marginBottom="8dp"
             app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintHorizontal_bias="0.494"
-            app:layout_constraintVertical_bias="0.7"/>
+            app:layout_constraintVertical_bias="0.777"/>
     <TextView
             android:text="0"
             android:textColor="#ffffff"
@@ -36,29 +36,26 @@
             app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="8dp"
             android:layout_marginStart="8dp" android:layout_marginTop="8dp" app:layout_constraintTop_toTopOf="parent"
             android:layout_marginBottom="8dp" app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0.857"/>
+            app:layout_constraintVertical_bias="0.922" android:gravity="center" android:textSize="36sp"/>
     <SeekBar
             android:layout_width="175dp"
             android:layout_height="50dp" android:id="@+id/seekBar"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="48dp" app:layout_constraintStart_toEndOf="@+id/coldView"
-            android:layout_marginLeft="36dp" android:layout_marginStart="36dp"/>
+            android:layout_marginTop="56dp"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="8dp"
+            android:layout_marginStart="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+    />
     <ImageView
-            android:layout_width="75dp"
-            android:layout_height="75dp" app:srcCompat="@drawable/cold" android:id="@+id/coldView"
+            android:layout_width="71dp"
+            android:layout_height="88dp" app:srcCompat="@drawable/cold" android:id="@+id/coldView"
             android:layout_marginTop="8dp"
             app:layout_constraintTop_toTopOf="parent" android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintVertical_bias="0.068"
-            android:layout_marginEnd="320dp" app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginRight="320dp"/>
-    <ImageView
-            android:layout_width="75dp"
-            android:layout_height="75dp" app:srcCompat="@drawable/hot" android:id="@+id/heatView"
-            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp" android:layout_marginRight="8dp"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="8dp"
-            android:layout_marginStart="8dp"
-            app:layout_constraintHorizontal_bias="0.978" android:layout_marginBottom="552dp"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintVertical_bias="0.078"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="28dp" android:layout_marginStart="28dp"
+            android:layout_marginEnd="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginRight="8dp"
+            app:layout_constraintHorizontal_bias="0.0"/>
     <ImageView
             android:layout_width="150dp"
             android:layout_height="150dp" app:srcCompat="@drawable/smile3" android:id="@+id/smile"
@@ -68,17 +65,7 @@
             app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp" android:layout_marginRight="8dp"
             app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="8dp"
             android:layout_marginStart="8dp" app:layout_constraintHorizontal_bias="0.497"
-            app:layout_constraintVertical_bias="0.357"/>
-    <Button
-            android:text="Refresh"
-            android:layout_width="231dp"
-            android:layout_height="42dp" android:id="@+id/refresh"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="8dp"
-            android:layout_marginStart="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp" android:layout_marginTop="8dp"
-            app:layout_constraintTop_toTopOf="@+id/device_list_m" android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0.954" android:visibility="invisible"/>
+            app:layout_constraintVertical_bias="0.418"/>
     <ListView
             android:layout_width="367dp"
             android:layout_height="509dp" app:layout_constraintTop_toTopOf="parent"
@@ -86,5 +73,24 @@
             app:layout_constraintStart_toStartOf="parent" android:visibility="invisible" android:id="@+id/device_list_m"
             android:layout_marginBottom="8dp" app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintVertical_bias="0.0"/>
+    <ImageView
+            android:layout_width="73dp"
+            android:layout_height="79dp" app:srcCompat="@drawable/hot"
+            android:id="@+id/heat" android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginTop="8dp"
+            app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="8dp" android:layout_marginStart="8dp" app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp" android:layout_marginRight="8dp" app:layout_constraintHorizontal_bias="0.972"
+            app:layout_constraintVertical_bias="0.077"/>
+    <Button
+            android:text="Back"
+            android:layout_width="104dp"
+            android:layout_height="72dp" android:id="@+id/back"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="8dp"
+            android:layout_marginStart="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp" android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginTop="8dp"
+            app:layout_constraintTop_toTopOf="@+id/device_list_m" app:layout_constraintHorizontal_bias="0.934"
+            app:layout_constraintVertical_bias="0.923" android:visibility="invisible"/>
 
 </android.support.constraint.ConstraintLayout>
