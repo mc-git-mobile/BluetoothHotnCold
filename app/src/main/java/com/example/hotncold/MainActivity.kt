@@ -1,5 +1,6 @@
 package com.example.hotncold
 
+import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.annotation.TargetApi
 import android.app.Activity
 import android.bluetooth.*
@@ -54,9 +55,8 @@ class MainActivity : AppCompatActivity() {
 
     var sent = "0"
     var disconect = true
-    var win = true
-    var lose = true
-
+    var win = false
+    var lose = false
 
     var ten:Double = 10.00000000000000000000000000
     var measured_power = -69 // 1 meter rssi
@@ -74,12 +74,9 @@ class MainActivity : AppCompatActivity() {
     var device_list = arrayListOf<String>("")
     var device_list1 = arrayListOf<String>("")
 
-
     private var m_bluetooth_adapter: BluetoothAdapter? = null //holds the Bluetooth Adapter
     private var arrayAdapter: ArrayAdapter<String>? = null // adapter for list view if needed
     private var listView: ListView? = null // list view for action bar to show data if needed
-
-
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -90,35 +87,6 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         save(playersW, playersL)
-        //Log.i(TCLIENT, "iiiiinnnn   savvee")
-
-        /*
-        val fileOutputStream:FileOutputStream
-        var win1 = win.toString()
-        var lose1 = lose.toString()
-        var combined = win1 + "#" + lose1
-
-        try {
-            fileOutputStream = openFileOutput(fileName, Context.MODE_PRIVATE)
-            fileOutputStream.write(combined.toByteArray())
-            Log.i(TCLIENT, combined)
-            Log.i(TCLIENT, "combined stringin save")
-
-        }catch (e: FileNotFoundException){
-            Log.i(TCLIENT, "file not found")
-            e.printStackTrace()
-        }catch (e: NumberFormatException){
-            Log.i(TCLIENT, "number format exception")
-            e.printStackTrace()
-        }catch (e: IOException){
-            Log.i(TCLIENT, "IO exception")
-            e.printStackTrace()
-        }catch (e: Exception){
-            Log.i(TCLIENT, "Exception")
-            e.printStackTrace()
-        }*/
-
-
 
         supportActionBar?.setDisplayShowTitleEnabled(false)
         myUUID = UUID.fromString(MY_UUID_STRING)
@@ -140,14 +108,45 @@ class MainActivity : AppCompatActivity() {
 
 
         ping.setOnClickListener{
-            if (pings < 5){
+
+            if(seekVal > 98 && pings < 5){
+                heatView.setBackgroundColor(Color.rgb(105,190,40))
+                smile.setImageResource(R.drawable.trophy)
+                load()
+                playersW ++
+                win = true
+                save(playersW, playersL)
+                Toast.makeText(applicationContext,
+                    "You've won " + playersW + " time(s)", Toast.LENGTH_LONG).show()
+                //Thread.sleep(3000)
+                //reset()
+                pings = 0
+            }
+
+            else if (pings < 5){
             pings++
             pingCount.text = pings.toString()
-            }else{
+            }
+            /*
+            else if(seekVal > 98){
+                heatView.setBackgroundColor(Color.rgb(105,190,40))
+                smile.setImageResource(R.drawable.trophy)
+                load()
+                playersW ++
+                win = true
+                save(playersW, playersL)
+                Toast.makeText(applicationContext,
+                    "You've won " + playersW + " time(s)", Toast.LENGTH_LONG).show()
+                Thread.sleep(3000)
+                //reset()
+                pings = 0
+            }*/
+            else{
 
                 pingCount.text = "LOSER"
                 load()
                 playersL++
+                lose = true
                 save(playersW, playersL)
 
 
@@ -161,18 +160,20 @@ class MainActivity : AppCompatActivity() {
                 sent = "01"
 
             }
+            /*
             if(seekVal > 98){
                 heatView.setBackgroundColor(Color.rgb(105,190,40))
                 smile.setImageResource(R.drawable.trophy)
                 load()
                 playersW ++
+                win = true
                 save(playersW, playersL)
                 Toast.makeText(applicationContext,
                     "You've won " + playersW + " time(s)", Toast.LENGTH_LONG).show()
                 Thread.sleep(3000)
                 //reset()
                 pings = 0
-            }
+            }*/
             if (device_to_find !== "none") {
                 setUpBroadcastReceiver()
             }
@@ -451,7 +452,6 @@ class MainActivity : AppCompatActivity() {
         heatView.setBackgroundColor(Color.rgb(0,0,0))
         pings = 0
         smile.setImageResource(R.drawable.smile3)
-
     }
 
     fun message (){
@@ -545,7 +545,6 @@ class MainActivity : AppCompatActivity() {
             if (device_to_find == deviceName){
                 var na = abs(rssi.toInt())
 
-
                 var part = (measured_power - rssi)/(ten*2).toDouble()
 
                 var distance = Math.pow(ten, part)
@@ -555,7 +554,6 @@ class MainActivity : AppCompatActivity() {
 
                 Log.i(TCLIENT,"RSSI dist- " +  distance + "meters")
 
-
                 Log.i(TCLIENT,"new RSSI dist *10- " +  new_dist.toInt() + "meters")
                 Log.i(TCLIENT,"new RSSI dist *100- " +  new_dist1.toInt() + "meters")
 
@@ -563,7 +561,7 @@ class MainActivity : AppCompatActivity() {
 
                 Log.i(TCLIENT,"RSSI- " +  rssi.toInt())
                 //toast(new_dist.toString())
-                if (new_dist.toInt() < 100 && new_dist.toInt() > 0){
+                if (new_dist.toInt() < 99 && new_dist.toInt() > 0){
                     toast(new_dist.toString())
                     var reverse = 100 - new_dist.toInt()
                     if (reverse <10 && reverse > 0 ){
@@ -580,9 +578,7 @@ class MainActivity : AppCompatActivity() {
                             sent = reverse.toString()
                         }
 
-
                     }
-                    //sent = reverse.toString()
 
                     seekBar.setProgress(reverse)
                     Log.i(TCLIENT,"RSSI in range-  " +  abs(rssi.toInt()))
@@ -590,18 +586,18 @@ class MainActivity : AppCompatActivity() {
                 }
                 else if (new_dist.toInt() <= 0 ) {
 
-                    seekBar.setProgress(99)
+                    seekBar.setProgress(98)
                     //toast("you are are right on top of it!")
 
                     if (disconect) {
-                        sent = "98"
+                        sent = "00"
                     }
 
 
                     Log.i(TCLIENT,"RSSI too far <0  " +  abs(rssi.toInt()))
                 }
                 else if (new_dist.toInt() >= 100 ) {
-                    seekBar.setProgress(1)
+                    seekBar.setProgress(2)
 
                     //toast("you are too far away! < 0")
                     if (disconect) {
@@ -611,6 +607,14 @@ class MainActivity : AppCompatActivity() {
                     Log.i(TCLIENT,"RSSI too far >0  " +  abs(rssi.toInt()))
                 }
                 disconect = true
+                if (win) {
+                    sent == "01"
+                }
+                else if (lose){
+                    sent == "99"
+                }
+                win = false
+                win = false
 
                 Log.i(TCLIENT,"Canceling Discovery")
                 m_bluetooth_adapter!!.cancelDiscovery()
@@ -639,9 +643,10 @@ class MainActivity : AppCompatActivity() {
      * This action is specific to this App.
      * @param msg The received info to display
      */
-    //fun echoMsg(msg: String) {
-        //mTextArea!!.append(msg)
-    //}
+    fun echoMsg(msg: String) {
+        Toast.makeText(applicationContext,
+            "You've won!-  $msg", Toast.LENGTH_LONG).show()
+        }
 
     ////////////////// Client Thread to talk to Server here ///////////////////
 
@@ -698,12 +703,11 @@ class MainActivity : AppCompatActivity() {
         private fun manageConnectedSocket(socket: BluetoothSocket) {
 
             val out: OutputStream
-            val theMessage = "ABC"      //test message: send actual message here
-            val msg = theMessage.toByteArray()
+            //val theMessage = "ABC"      //test message: send actual message here
+            //val msg = theMessage.toByteArray()
             val sentB = sent.toByteArray()
             try {
                 Log.i(TCLIENT, "Sending the message: [$sent]")
-
 
                 out = socket.outputStream
                 out.write(sentB)
@@ -792,8 +796,6 @@ class MainActivity : AppCompatActivity() {
                 return
             }
 
-
-
             try {
 
                 val msgString = msg.toString(Charsets.UTF_8)
@@ -802,17 +804,39 @@ class MainActivity : AppCompatActivity() {
                 //runOnUiThread { echoMsg("\nReceived $nBytes:  [$msgString]\n") }
                 Log.i(TSERVER, msgString.toString() + "+++++++++++++++++++++++")
 
+                //********************************************************************************
+
+                /*echoMsg(msg.toString())
+                Toast.makeText(applicationContext,
+                    "You've won " + playersW + " time(s)", Toast.LENGTH_LONG).show()*/
+
+                //********************************************************************************
+
+
                 while (msgString.toString() != "00") {
                     val msgString = msg.toString(Charsets.UTF_8)
+                    var seek:SeekBar = findViewById(R.id.seekBar)
+
 
                     if (msgString.toString() == "01") {
+                        load()
                         playersW += 1
+                        save(playersW, playersL)
+                        seek.setProgress(2)
+                        smile.setImageResource(R.drawable.trophy)
+
                     }
-                    else if(msgString.toString() == "02"){
+                    else if(msgString.toString() == "99"){
+                        load()
                         playersL +=1
+                        save(playersW, playersL)
+                        seek.setProgress(97)
+                        smile.setImageResource(R.drawable.loser)
+
+
                     }
                     else{
-                        var seek:SeekBar = findViewById(R.id.seekBar)
+                        //var seek:SeekBar = findViewById(R.id.seekBar)
                         seek.setProgress(msgString.toInt())
                     }
                     Thread.sleep(1000)
