@@ -22,8 +22,6 @@ import android.support.v4.app.ActivityCompat
 import android.util.Log
 import android.view.View
 import android.widget.*
-//import com.example.hotncold.MainActivity.AcceptThread.Companion.TSERVER
-
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlin.collections.ArrayList as ArrayList1
@@ -31,6 +29,29 @@ import org.jetbrains.anko.toast
 import java.io.*
 import java.util.*
 import kotlin.math.abs
+
+/*
+Chris Johnson
+Matt Harvey
+
+This is a  hide and seek game, we use bluetooth RSSI readings from
+a selected paired device to estimate the range. The range is used to give
+a color estimation(hot or cold) whether the user is close or far away.
+Once the seeker is within 0.5 meters the seeker will get a win and the hider
+will get a lose. The wins and losses are counted then saved to a file and
+loads it when the user requests the count of wins and losses.
+
+Credit to -
+Proffessor Aaron Gordon
+    - https://github.com/aaronjg50/TalkerM
+    - we used Proffessor gordons bluetooth implementation and expanded
+      on it to get RSSI data and send different values.
+LUQMAN HAKEM from IOT AND ELECTRONICS
+    - https://iotandelectronics.wordpress.com/2016/10/07/how-to-calculate-distance-from-the-rssi-value-of-the-ble-beacon/
+    - we used the equation in this article to calculate meters from the bluetooth RSSI value
+
+
+ */
 
 
 class MainActivity : AppCompatActivity() {
@@ -822,18 +843,8 @@ class MainActivity : AppCompatActivity() {
             try {
 
                 val msgString = msg.toString(Charsets.UTF_8)
-                //val toast = Toast.makeText(applicationContext, "Hello Javatpoint", Toast.LENGTH_LONG)
                 Log.i(TSERVER, "\nServer Received  $nBytes, Bytes:  [$msgString]\n")
-                //runOnUiThread { echoMsg("\nReceived $nBytes:  [$msgString]\n") }
                 Log.i(TSERVER, msgString.toString() + "+++++++++++++++++++++++")
-
-                //********************************************************************************
-
-                /*echoMsg(msg.toString())
-                Toast.makeText(applicationContext,
-                    "You've won " + playersW + " time(s)", Toast.LENGTH_LONG).show()*/
-
-                //********************************************************************************
 
 
                 while (msgString.toString() != "00") {
@@ -841,7 +852,7 @@ class MainActivity : AppCompatActivity() {
                     var seek:SeekBar = findViewById(R.id.seekBar)
 
 
-                    if (msgString.toString() == "99") {
+                    if (msgString.toString() == "01") {
                         load()
                         playersW += 1
                         save(playersW, playersL)
@@ -851,21 +862,13 @@ class MainActivity : AppCompatActivity() {
                             Toast.makeText(applicationContext,
                                 "You've won " , Toast.LENGTH_LONG).show()
                             val vibratorService = getSystemService(Context.VIBRATOR_SERVICE ) as Vibrator
-
                             vibratorService.vibrate(500)
-
-                            //toast("You Won")
-
-                            //Thread.sleep(3000)
-                            //heatView.setBackgroundColor(Color.rgb(0,0,0))
                             pings = 0
                             pingCount.text = pings.toString()
-                            //smile.setImageResource(R.drawable.smile3)
                         })
-                        //smile.setImageResource(R.drawable.trophy)
 
                     }
-                    else if(msgString.toString() == "01"){
+                    else if(msgString.toString() == "99"){
                         load()
                         playersL +=1
                         save(playersW, playersL)
@@ -878,25 +881,17 @@ class MainActivity : AppCompatActivity() {
 
                             vibratorService.vibrate(500)
 
-                            //toast("You Lost")
-                            //Thread.sleep(3000)
-                            //heatView.setBackgroundColor(Color.rgb(0,0,0))
                             pings = 0
                             pingCount.text = pings.toString()
-                            //smile.setImageResource(R.drawable.smile3)
                         })
-                        //smile.setImageResource(R.drawable.loser)
-
 
                     }
                     else if(msgString.toString() == "mm"){
                         var startup = "startup routine"
                     }
                     else{
-                        //var seek:SeekBar = findViewById(R.id.seekBar)
                         seek.setProgress(msgString.toInt())
                     }
-                    //Thread.sleep(1000)
 
                     run()
                 }
@@ -905,7 +900,6 @@ class MainActivity : AppCompatActivity() {
             } catch (uee: UnsupportedEncodingException) {
                 Log.e(TSERVER,
                     "UnsupportedEncodingException when converting bytes to String\n $uee")
-                //cancel()
             } finally {
                 cancel()        //for this App - close() after 1 (or no) message received
             }
